@@ -700,11 +700,26 @@
             return `${CONFIG.repo}/${folder}/${filename}`;
         }
 
-        // Dibuja las piezas en los paneles laterales
+        // Dibuja las piezas en los paneles laterales (Con efecto de desactivado)
         function updateInventories() {
             ['rojo', 'negro'].forEach(army => {
                 const list = document.getElementById(`inv-${army}`);
                 list.innerHTML = '';
+
+                // --- 1. Determinar si este ejército está ACTIVO ---
+                let isActive = true; // En 'init' ambos están activos
+
+                if (gameState === 'deploy-p1') {
+                    isActive = (army === p1Color);
+                } else if (gameState === 'deploy-p2') {
+                    isActive = (army === p2Color);
+                } else if (gameState === 'game-over') {
+                    isActive = false; // Nadie mueve al final
+                } else if (gameState !== 'init') {
+                    // Para cualquier fase de juego (playing, siege, etc.)
+                    isActive = (army === turnColor);
+                }
+                // --------------------------------------------------
 
                 for (const [type, data] of Object.entries(CONFIG.pieces)) {
                     const count = reserves[army][type];
@@ -713,15 +728,26 @@
                         const item = document.createElement('div');
                         item.className = 'inv-item';
 
-                        // --- CAMBIO AQUÍ: Añadimos ondragend ---
                         const img = document.createElement('img');
                         img.src = getImgUrl(army, type);
-                        img.draggable = true;
 
-                        img.ondragstart = (e) => handleDragStart(e, 'reserve', army, type);
-                        // NUEVO: Limpiar al soltar (aunque sea fuera)
-                        img.ondragend = () => clearRingHighlights();
-                        // ----------------------------------------
+                        // --- 2. Aplicar propiedades según estado ---
+                        if (isActive) {
+                            img.draggable = true;
+                            img.style.cursor = "grab";
+                            img.style.filter = "none"; // Normal
+                            img.style.opacity = "1";
+
+                            img.ondragstart = (e) => handleDragStart(e, 'reserve', army, type);
+                            img.ondragend = () => clearRingHighlights();
+                        } else {
+                            img.draggable = false;
+                            img.style.cursor = "not-allowed"; // Icono de prohibido
+                            // Efecto visual: Escala de grises y semitransparente
+                            img.style.filter = "grayscale(100%)";
+                            img.style.opacity = "0.3";
+                        }
+                        // -------------------------------------------
 
                         item.appendChild(img);
 
@@ -729,6 +755,10 @@
                             const badge = document.createElement('div');
                             badge.className = 'inv-badge';
                             badge.innerText = count;
+
+                            // También apagamos el badge visualmente si está inactivo
+                            if (!isActive) badge.style.filter = "grayscale(100%)";
+
                             item.appendChild(badge);
                         }
                         list.appendChild(item);
@@ -1209,7 +1239,7 @@
 
                     return;
                 }
-                
+
                 // Si estamos en JUEGO NORMAL (Defensor intentó salvarse)
                 const defenderArmy = data.army;
                 const attackerArmy = (defenderArmy === 'rojo') ? 'negro' : 'rojo';
@@ -1231,6 +1261,8 @@
                         // NUEVO: NO EJECUTAMOS TODAVÍA. PASAMOS A FASE DE CONFIRMACIÓN.
                         gameState = 'siege-confirmation';
                         turnColor = attackerArmy; // El turno vuelve al atacante
+
+                        isBesieged = false;
 
                         showNotification(`⚔️ ASEDIO LISTO: Pulsa la Fortaleza enemiga para ejecutar o mueve una pieza para cancelar.`);
                         renderBoard(); updateInventories(); updateDungeons();

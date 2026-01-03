@@ -593,10 +593,10 @@
                 </p>
                 <h3>0. SISTEMA DE AYUDA</h3>
                 <ol>
-                    <li>Mántén el ratón sobre cada una de las unidades durante <strong>1 segundo</strong> para que se 
+                    <li>Mántén el ratón sobre cada una de las unidades durante <strong>1 segundo</strong> para que se
                         active las Ayuda Visual. Son una serie de iconos que aparecen en la linea de Notificaciones
-                         (bajo el título) te recuerdan cómo mover. Qué obstáculos debes tener en cuenta. Y cuales son
-                          las características especiales de esa unidad.</li>
+                        (bajo el título) te recuerdan cómo mover. Qué obstáculos debes tener en cuenta. Y cuales son
+                        las características especiales de esa unidad.</li>
                     <li> Si lo mantienes durante <strong>3 segundos</strong> se activará una ayuda visual en el tablero,
                         mostrándote a que casillas puedes ir y cuales de encuentran bloqueadas.</li>
                 </ol>
@@ -639,7 +639,8 @@
                 <ul>
                     <li><strong>👑 Rey:</strong> Se mueve 1 casilla en cualquier dirección (⬆️:1✖️➕). Es la pieza
                         <strong>"CLAVE":</strong> si la capturan se termina la partida.
-                        No puede mover a una casillas bajo ⚠️ Amenaza o bloqueada (⛔:🤝🏰🏔️🌊⚠️).</li>
+                        No puede mover a una casillas bajo ⚠️ Amenaza o bloqueada (⛔:🤝🏰🏔️🌊⚠️).
+                    </li>
                     <li><strong>🏚️ Chusma:</strong> Se mueve 1 casilla ortogonal (⬆️:1➕). No puede mover a casillas
                         bloqueadas (⛔:🤝🏰🏔️🌊).<strong>EXTRA: "Marcha Forzada (⚡:+1🏚️)":</strong> Mueve 2
                         unidades de chusma distintas en el mismo turno. Puedes renunciar a la "Marcha Forzada" haciendo
@@ -711,48 +712,137 @@
 
             <div id="rules-en" class="rules-container">
                 <h3>🎯 OBJECTIVE</h3>
-                <p>The objective is simple and brutal: <strong>Capture the enemy King</strong>. You can achieve this
-                    through a traditional <strong>Checkmate</strong> or by besieging their fortress.</p>
+                <p>The objective is simple and brutal: <strong>Capture the enemy 👑 King</strong>. You can achieve this
+                    through a traditional <strong>Checkmate</strong> on the board or by besieging their 🏰 Fortress
+                    until
+                    they are forced to come out and be annihilated.
+                </p>
+                <h3>0. HELP SYSTEM</h3>
+                <ol>
+                    <li>Hover your mouse over any unit for <strong>1 second</strong> to activate Visual Aid. A series of
+                        icons
+                        will appear in the Notification bar (under the title) to remind you how it moves, which
+                        obstacles
+                        to avoid, and what the unit's special characteristics are.</li>
+                    <li>If you hold it for <strong>3 seconds</strong>, a visual aid will activate on the board, showing
+                        you
+                        which squares you can go to and which ones are blocked.</li>
+                </ol>
 
                 <h3>1. DEPLOYMENT PHASE (Fog of War)</h3>
                 <ol>
-                    <li><strong>The Fortress:</strong> Place it first to define territory.</li>
-                    <li><strong>The Troops:</strong> Deploy in the <strong>Exit Ring</strong> surrounding your Fortress.
+                    <li><strong>🏰 The Fortress:</strong> You must 🏗️ build it first: define your 🚩 Territory (North
+                        or South)
+                        and your colors (Red & Gold or Black & Silver). No unit can ⛔ pass through it. It is the
+                        only unit that can be placed on 🌊 Water tiles. If you haven't deployed troops yet, you can
+                        return
+                        it to the Reserve by clicking on it and placing it elsewhere. It cannot move during the game
+                        (➡️:⛔).</li>
+                    <li><strong>🪖 The Troops (🤝 Allies or 🧨 Enemies):</strong> Drag your units from the Reserve to
+                        the
+                        <strong>Exit Ring</strong> (the 12 squares surrounding your 🏰 Fortress). If you want to return
+                        a unit
+                        to the Reserve during this phase, drag it out of the Exit Ring. Pieces with no room in the Exit
+                        Ring
+                        stay temporarily in the Reserve.
                     </li>
-                    <li><strong>The Mountains:</strong> Place anywhere in your territory.</li>
+                    <li><strong>🏔️ The Mountains:</strong> Can be 🏗️ placed anywhere in your 🚩 Territory. Only
+                        🐉 Dragons can fly over them. They cannot move during the game (➡️:⛔).</li>
+                    <li><strong>End of Turn:</strong> To indicate you have finished deploying your army, click on your
+                        Fortress.
+                        Note that it won't let you finish the turn until you have placed all 🏔️ Mountains and at least
+                        one unit.</li>
+                    <li><strong>To Battle!:</strong> Player 2 deploys "blindly". When Player 1 finishes their deployment
+                        turn,
+                        their army is hidden so Player 2 has no advantage.</li>
                 </ol>
 
                 <h3>2. MOVEMENT AND COMBAT</h3>
+                <p>Moves are turn-based; the board frame indicates the color of the active army.
+                    In a turn, you can move, shoot, or deploy units from the Reserve.
+                </p>
+                <p>Captured pieces go to the enemy <strong>Dungeon</strong>. You can rescue them later!
+                    By besieging the enemy 🏰 Fortress (SEE 3. SIEGE MECHANICS).
+                </p>
+
                 <h4>🛡️ Basic Units</h4>
                 <ul>
-                    <li><strong>👑 King:</strong> Moves 1 square. Key piece.</li>
-                    <li><strong>🏚️ Rabble:</strong> Moves 1 square (+). <strong>"Forced March":</strong> Move 2
-                        Rabbles.</li>
-                    <li><strong>🔱 Lancer:</strong> Moves 1 square (+). <strong>"Relay":</strong> Swap with ally.</li>
-                    <li><strong>🏹 Archer:</strong> Moves 1 square (X). <strong>"Jump":</strong> Jumps 2 squares to
-                        capture.</li>
+                    <li><strong>👑 King:</strong> Moves 1 square in any direction (⬆️:1✖️➕). It is the
+                        <strong>"KEY"</strong> piece:
+                        if captured, the game ends. Cannot move to ⚠️ Threatened or blocked squares (⛔:🤝🏰🏔️🌊⚠️).
+                    </li>
+                    <li><strong>🏚️ Rabble:</strong> Moves 1 orthogonal square (⬆️:1➕). Cannot move to blocked squares
+                        (⛔:🤝🏰🏔️🌊). <strong>EXTRA: "Forced March (⚡:+1🏚️)":</strong> Move 2 different Rabble units
+                        in the
+                        same turn. You can waive the "Forced March" by clicking on the unit you just moved.</li>
+                    <li><strong>🔱 Lancer:</strong> Moves 1 orthogonal square (⬆️:1➕). Cannot move to blocked squares
+                        (⛔:🏰🏔️🌊). <strong>EXTRA: "Relay (⚡:🤝🔄)":</strong> Swaps position with an 🤝 Ally if moving
+                        to
+                        the square occupied by them.</li>
+                    <li><strong>🏹 Archer:</strong> Moves 1 diagonal square (⬆️:1✖️). Cannot move to blocked squares
+                        (⛔:🤝🏰🏔️🌊). <strong>EXTRA: "Long Range (⚡:🧨+1)":</strong> Can move 2 squares to capture an
+                        🧨 Enemy unit.</li>
                 </ul>
 
                 <h4>🐎 Cavalry and Beasts</h4>
                 <ul>
-                    <li><strong>🐴 Light Cavalry:</strong> "L" jump (3x1). Jumps over troops.</li>
-                    <li><strong>🛡️ Heavy Cavalry:</strong> Short "L" (2x1). Through allies only.</li>
-                    <li><strong>🐘 Elephant:</strong> Rook-move. <strong>"Thick Skin":</strong> Needs 2+ threats or
-                        Dragon.</li>
-                    <li><strong>🐉 Dragon:</strong> Queen-move. Flies over obstacles.</li>
+                    <li><strong>🐴 Light Cav.:</strong> Moves in a diagonal "L" (⬆️:2+1✔️). <strong>CANNOT</strong> move
+                        through
+                        blocked squares (⛔:🏰🏔️🌊). <strong>EXTRA: "Jump (⚡:👻🪖)":</strong> Jumps over 🤝 Allied and
+                        🧨 Enemy troops.
+                    </li>
+                    <li><strong>🛡️ Heavy Cav.:</strong> Moves in an orthogonal "L" (⬆️:2+1L). <strong>CANNOT</strong>
+                        move through
+                        blocked squares (⛔:🧨🏰🏔️🌊). <strong>EXTRA: "Right of Way (⚡:👻🤝)":</strong> Passes through
+                        🤝 Allied troops.
+                    </li>
+                    <li><strong>🐘 Elephant:</strong> Moves orthogonally (⬆️:➕). Cannot pass through blocked squares
+                        (⛔:🪖🏰🏔️🌊). <strong>EXTRA: "Thick Skin (⚡:🔒+🧨🧨or🐉):"</strong> Immune to individual
+                        attacks
+                        (needs 2+ enemies or a 🐉 Dragon to capture it).</li>
+                    <li><strong>🐉 Dragon:</strong> Moves in any direction (⬆️:➕✖️). Cannot pass through blocked squares
+                        (⛔:🪖🏰). <strong>EXTRA: "Flight (⚡:🐘👻🏔️🌊):"</strong> Can fly over 🏔️ Mountains and 🌊
+                        Water
+                        and capture 🐘 Elephants without support.</li>
                 </ul>
 
                 <h4>⚙️ Siege Weapons</h4>
                 <ul>
-                    <li><strong>☄️ Trebuchet:</strong> Moves Diagonal. Fires Orthogonal.</li>
-                    <li><strong>🦂 Scorpion:</strong> Moves Orthogonal. Fires Diagonal.</li>
+                    <li><strong>Siege Weapons</strong> can ⬆️ Move (to an 🔲 empty square: they only capture by
+                        shooting) or
+                        🎯 Shoot, but cannot do both in the same turn.</li>
+                    <li><strong>☄️ Trebuchet:</strong> Moves Diagonally 1 square (must be 🔲 empty) (⬆️:1✖️🔲). Shoots
+                        Orthogonally (🎯:➕).
+                        Cannot pass through blocked squares (⛔:🏰🏔️). <strong>EXTRA: "Parabolic Shot
+                            (⚡:👻🪖🌊):"</strong>
+                        Can shoot over 🌊 Water and squares occupied by 🧨 Enemies or 🤝 Allies.</li>
+                    <li><strong>🦂 Scorpion:</strong> Moves Orthogonally 1 square (must be 🔲 empty) (⬆️:1➕🔲). Shoots
+                        Diagonally (🎯:✖️).
+                        Cannot pass through blocked squares (⛔:🤝🏰🏔️). <strong>EXTRA: "Skewer
+                            (⚡:👻🌊🧨🍡🧨):"</strong>
+                        Can shoot over 🌊 Water and squares occupied by 🧨 Enemies if there is a second 🧨 Enemy unit
+                        less than
+                        2 squares away and the intermediate square, if any, is 🔲 empty or 🌊 water: in that case, it
+                        captures both
+                        (drag to the second enemy unit).</li>
                 </ul>
 
-                <h3>3. SIEGE MECHANIC</h3>
-                <p><strong>STEP 1: THREAT</strong> (2+ units at gate).</p>
-                <p><strong>STEP 2: DEFENSE</strong> (1 turn to break siege).</p>
-                <p><strong>STEP 3: EXECUTION</strong> (Click Fortress).</p>
-                <p><strong>STEP 4: CONSEQUENCES</strong> (Rescue & Sacrifice).</p>
+                <h3>3. SIEGE MECHANICS</h3>
+                <p><strong>STEP 1: THREAT</strong><br>Place <strong>2+ 🤝 Allied units</strong> in the Exit Ring of the
+                    🧨 Enemy 🏰 Fortress.</p>
+                <p><strong>STEP 2: DEFENSE</strong><br>The defender has <strong>1 turn</strong> to break the siege.</p>
+                <p><strong>STEP 3: EXECUTION</strong><br>If they fail, the attacker clicks the 🏰 Fortress to EXECUTE
+                    the SIEGE.</p>
+                <p><strong>STEP 4: CONSEQUENCES</strong></p>
+                <ul>
+                    <li><strong>Rescue:</strong> The attacker frees 1 prisoner by clicking on them in the enemy dungeon.
+                        Their troops return to their Reserve.</li>
+                    <li><strong>Hostage Exchange:</strong> The defender saves 1 unit (if a Rescue occurred) by moving it
+                        from
+                        the Reserve to the Exit Ring or <strong>LOSES EVERYTHING</strong> (if there were no units in
+                        their Dungeon
+                        to negotiate the exchange).</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -825,6 +915,8 @@
         // --- NUEVO: INFORMACIÓN DE UNIDADES (HOVER MULTI-IDIOMA) ---
         let hoverTimer = null;
 
+        let boardHelpTimer = null; // Timer para la ayuda visual en el tablero (3s)
+
         const UNIT_INFO = {
             'es': {
                 'rey': "👑 REY:·····⬆️:1✖️➕·····⛔:🤝🏰🏔️🌊⚠️",
@@ -856,36 +948,114 @@
             }
         };
 
-        // Función para mostrar la info tras 1 segundo (DETECTANDO IDIOMA)
-        function handleUnitHover(type) {
+        // --- FUNCIONES DE HOVER ACTUALIZADAS ---
+
+        function handleUnitHover(type, army, r, c) {
             if (draggingMeta) return;
 
+            // 1. Timer de Texto (1 segundo)
             if (hoverTimer) clearTimeout(hoverTimer);
-
             hoverTimer = setTimeout(() => {
                 if (!draggingMeta) {
                     const bar = document.getElementById('status-bar');
-
-                    // 1. Detectamos el idioma actual (si no existe, usa español por defecto)
+                    // Detectar idioma
                     const lang = currentLang || 'es';
-
-                    // 2. Buscamos el texto correspondiente
                     const dict = UNIT_INFO[lang] || UNIT_INFO['es'];
                     const info = dict[type] || type.toUpperCase();
 
                     bar.innerText = `ℹ️ ${info}`;
-                    bar.style.color = '#3498db';
+                    bar.style.color = '#3498db'; // Azul informativo
                     bar.classList.remove('status-critical');
                 }
             }, 1000);
+
+            // 2. Timer de Tablero (3 segundos) - NUEVO
+            // Solo si la pieza es del turno actual o es setup (para no dar pistas del enemigo)
+            const isMyPiece = (gameState.includes('deploy') || army === turnColor);
+
+            if (boardHelpTimer) clearTimeout(boardHelpTimer);
+
+            if (isMyPiece) {
+                boardHelpTimer = setTimeout(() => {
+                    if (!draggingMeta) {
+                        activateBoardHelp(r, c, type, army);
+                    }
+                }, 3000);
+            }
         }
 
         function handleUnitLeave() {
+            // Limpiamos ambos timers y los efectos visuales
             if (hoverTimer) clearTimeout(hoverTimer);
+            if (boardHelpTimer) clearTimeout(boardHelpTimer);
+
+            clearGhosts(); // Borra las luces verdes/rojas del tablero
+
             if (!draggingMeta) {
-                updateStatusBar();
+                updateStatusBar(); // Restaura el texto original
             }
         }
+
+        // --- LÓGICA DE AYUDA VISUAL (3 SEGUNDOS) CON CONTADOR ---
+        function activateBoardHelp(originR, originC, type, army) {
+            if (draggingMeta) return;
+
+            // 1. Contador de movimientos válidos encontrados
+            let validMovesCount = 0;
+
+            // Recorremos las 100 casillas
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    if (r === originR && c === originC) continue;
+
+                    // Filtros de validez geométrica y obstaculos físicos
+                    if (isValidMove(type, originR, originC, r, c)) {
+
+                        const target = logicBoard[r][c];
+                        const isMountain = target && target.type === 'montana';
+                        const isFortress = target && target.type === 'fortaleza';
+                        // Lanceros pueden hacer relevo, el resto no puede comerse aliados
+                        const isAlly = target && target.army === army && type !== 'lanceros';
+                        // Agua bloquea salvo voladores/anfibios
+                        const isWater = terrain[r][c] === 'water' && type !== 'trabuquete' && type !== 'escorpion' && type !== 'dragon';
+
+                        if (isMountain || isFortress || isAlly || isWater) {
+                            continue;
+                        }
+
+                        // Validación de seguridad (Jaque)
+                        let isSafe = true;
+                        if (gameState === 'playing') {
+                            try {
+                                isSafe = isSimulatedMoveSafe(type, originR, originC, r, c, army);
+                            } catch (e) { console.warn(e); }
+                        }
+
+                        // Pintar y CONTAR
+                        const tile = document.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
+                        if (tile) {
+                            if (isSafe) {
+                                tile.classList.add('ghost-valid'); // Verde
+                                validMovesCount++; // <--- SUMAMOS MOVIMIENTO VÁLIDO
+                            } else {
+                                tile.classList.add('ghost-invalid'); // Rojo (Suicidio)
+                                // No sumamos al contador porque no es un movimiento legal
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Feedback al usuario según el resultado
+            if (validMovesCount === 0) {
+                // Mensaje de error/aviso si está totalmente bloqueada
+                showNotification(`🚫 ${type.toUpperCase()}: SIN MOVIMIENTOS POSIBLES (BLOQUEADA)`, true);
+            } else {
+                // Mensaje informativo estándar con el número de opciones
+                showNotification(`💡 Visualizando ${validMovesCount} movimientos posibles...`);
+            }
+        }
+
 
         // Estado del juego: 'init', 'deploy-p1', 'deploy-p2', 'playing'
         let gameState = 'init';
@@ -1025,7 +1195,7 @@
                         img.className = 'piece';
 
                         // --- NUEVO: Eventos de Hover ---
-                        img.onmouseenter = () => handleUnitHover(piece.type);
+                        img.onmouseenter = () => handleUnitHover(piece.type, piece.army, r, c);
                         img.onmouseleave = () => handleUnitLeave();
 
 
@@ -1237,6 +1407,10 @@
         // --- 4. LÓGICA DE ARRASTRAR Y SOLTAR ---
 
         function handleDragStart(e, source, army, type, r = null, c = null) {
+
+            if (hoverTimer) clearTimeout(hoverTimer);
+            if (boardHelpTimer) clearTimeout(boardHelpTimer);
+            clearGhosts();
 
             // --- LÓGICA DE JUEGO Y MEDIO TURNO ---
             if (gameState === 'playing' || gameState === 'playing-chusma-bonus') {

@@ -948,6 +948,190 @@
             }
         };
 
+
+        // --- DICCIONARIO DE TRADUCCIÓN INVERSA ---
+        const MESSAGES = {
+            es: {
+                // Estas claves son el TEXTO EXACTO que tienes en tu código ahora
+                "north": "DEL NORTE",
+                "south": "DEL SUR",
+                "turn_generic": "Turno", // Para composiciones
+                "init": "Elige tu destino: Arrastra una Fortaleza para empezar. Mantén el ratón sobre cualquier unidad para Ayuda Visual",
+                "check": "⚠️ ¡JAQUE AL REY! DEBES PROTEGERLO INMEDIATAMENTE. ⚠️", // Simplificado
+                "siege_alert": "🛡️ ¡ALERTA! LA FORTALEZA ESTÁ RODEADA. ROMPE EL CERCO O PERDERÁS TROPAS.",
+                "water": " (AGUA 🌊)",
+                "fortress": " (FORTALEZA 🏰)",
+                "mountain": " (MONTAÑA 🏔️)",
+                "occupied": " (OCUPADO ⛔)",
+                "limits": " (FUERA DE LÍMITES 🚫)",
+                "check_label": " (JAQUE ⚠️)",
+                "msg_valid": "Movimiento Válido",
+                "msg_invalid": "Movimiento Inválido",
+                "rey": "REY",
+                "chusma": "CHUSMA",
+                "lanceros": "LANCERO",
+                "arqueros": "ARQUERO",
+                "c_ligera": "C. LIGERA",
+                "c_pesada": "C. PESADA",
+                "elefante": "ELEFANTE",
+                "dragon": "DRAGÓN",
+                "trabuquete": "TRABUQUETE",
+                "escorpion": "ESCORPIÓN",
+                "fortaleza": "FORTALEZA",
+                "montana": "MONTAÑA",
+                "rojo": "ROJO",
+                "negro": "NEGRO",
+                "siege_only": "🔒 Solo puedes mover las unidades que asedian la fortaleza.",
+                "deploy_fort": "🚫 Solo despliegue en Fortaleza.",
+                "invalid_cell": "🚫 Casilla inválida.",
+                "save_king": "👑 ¡Salva al REY!",
+                "death_zone": "⛔ ¡Zona mortal!",
+                "only_near": "⛔ Solo junto a tu Fortaleza.",
+                "no_water": "⛔ No en el agua.",
+                "zone_occ": "⛔ Zona ocupada.",
+                "illegal": "⛔ Movimiento ilegal",
+                "relay": "🔄 Relevo de Lancero",
+                "ally": "⛔ Casilla aliada.",
+                "shot": "🔥 ¡DISPARO!",
+                "capture": "⚔️ ¡CAPTURA!",
+                "siege_cancel": "🏳️ Asedio cancelado.",
+                "first_fort": "🚫 Primero debes construir la FORTALEZA",
+                "zone_forbid": "🚫 Zona Prohibida.",
+                "deploy_near": "🛡️ Despliega junto a la Fortaleza",
+                "no_fit": "¡No cabe aquí!",
+                "pos_invalid": "🏰 Posición inválida",
+                "turn_j1": "⚠️ Turno del JUGADOR 1",
+                "turn_j2": "⚠️ Turno del JUGADOR 2",
+                "relocated": "Unidad reubicada",
+                "mountains_left": "⚠️ Debes colocar todas las MONTAÑAS en el mapa antes de terminar.",
+                "fortress_set": "🏰 Fortaleza establecida.",
+                "rescue_fail": "⛔ Necesitas más tropas rodeando la Fortaleza Enemiga para rescatar.",
+                "rescue_empty": "🚁 ¡RESCATE ÉPICO! La fortaleza enemiga estaba vacía.",
+                "siege_end": "🔄 Asedio finalizado. Tus tropas regresan a la RESERVA.",
+                "fort_empty_end": "📭 Fortaleza vacía. Fin del asedio.",
+                "fort_remove": "↩️ Fortaleza retirada. Puedes cambiar de bando.",
+                "fort_remove_soft": "↩️ Fortaleza retirada. (Tus montañas se mantienen).",
+                "click_siege": "CLICK PARA EJECUTAR EL ASEDIO",
+                "click_pass": "Click para CEDER EL TURNO",
+                "click_rescue": "CLICK PARA RESCATAR Y EJECUTAR ASEDIO",
+                "occupied_simple": "⛔ Casilla ocupada",
+                "water_error": "🌊 ¡Al agua no!",
+                "water_simple": "⛔ Agua.",
+                "mountain_simple": "⛔ Montaña.",
+                "fortress_simple": "⛔ Fortaleza.",
+                "fortress_first_short": "⚠️ Primero la FORTALEZA.",
+                "no_fit_here": "¡No cabe aquí!", // Asegúrate de que esta coincida exactamente
+                "⛔ Casilla ocupada": "⛔ Casilla ocupada", // Clave = Valor para que funcione la búsqueda
+                "🌊 ¡Al agua no!": "🌊 ¡Al agua no!",
+                "⛔ Agua.": "⛔ Agua.",
+                "⛔ Montaña.": "⛔ Montaña.",
+                "⛔ Fortaleza.": "⛔ Fortaleza.",
+                "⚠️ Primero la FORTALEZA.": "⚠️ Primero la FORTALEZA."
+            },
+            en: {
+                "north": "NORTH",
+                "south": "SOUTH",
+                "turn_generic": "Turn",
+                "init": "Choose your destiny: Drag a Fortress to start. Hover for Visual Aid.",
+                "check": "⚠️ KING IN CHECK! PROTECT HIM IMMEDIATELY. ⚠️",
+                "siege_alert": "🛡️ ALERT! FORTRESS SURROUNDED. BREAK SIEGE OR LOSE TROOPS.",
+                "water": " (WATER 🌊)",
+                "fortress": " (FORTRESS 🏰)",
+                "mountain": " (MOUNTAIN 🏔️)",
+                "occupied": " (OCCUPIED ⛔)",
+                "limits": " (OUT OF BOUNDS 🚫)",
+                "check_label": " (CHECK ⚠️)",
+                "msg_valid": "Valid Move",
+                "msg_invalid": "Invalid Move",
+                "rey": "KING",
+                "chusma": "RABBLE",
+                "lanceros": "LANCER",
+                "arqueros": "ARCHER",
+                "c_ligera": "LT. CAVALRY",
+                "c_pesada": "HVY. CAVALRY",
+                "elefante": "ELEPHANT",
+                "dragon": "DRAGON",
+                "trabuquete": "TREBUCHET",
+                "escorpion": "SCORPION",
+                "fortaleza": "FORTRESS",
+                "montana": "MOUNTAIN",
+                "rojo": "RED",
+                "negro": "BLACK",
+                "siege_only": "🔒 You can only move units besieging the fortress.",
+                "deploy_fort": "🚫 Deployment only at Fortress.",
+                "invalid_cell": "🚫 Invalid tile.",
+                "save_king": "👑 Save the KING!",
+                "death_zone": "⛔ Death zone!",
+                "only_near": "⛔ Only next to your Fortress.",
+                "no_water": "⛔ Not on water.",
+                "zone_occ": "⛔ Zone occupied.",
+                "illegal": "⛔ Illegal move",
+                "relay": "🔄 Lancer Relay",
+                "ally": "⛔ Ally tile.",
+                "shot": "🔥 SHOT!",
+                "capture": "⚔️ CAPTURE!",
+                "siege_cancel": "🏳️ Siege canceled.",
+                "first_fort": "🚫 You must build the FORTRESS first",
+                "zone_forbid": "🚫 Forbidden Zone.",
+                "deploy_near": "🛡️ Deploy next to the Fortress",
+                "no_fit": "It doesn't fit here!",
+                "pos_invalid": "🏰 Invalid position",
+                "turn_j1": "⚠️ PLAYER 1 Turn",
+                "turn_j2": "⚠️ PLAYER 2 Turn",
+                "relocated": "Unit relocated",
+                "mountains_left": "⚠️ You must place all MOUNTAINS before finishing.",
+                "fortress_set": "🏰 Fortress established.",
+                "rescue_fail": "⛔ Need more troops surrounding Enemy Fortress.",
+                "rescue_empty": "🚁 EPIC RESCUE! The enemy fortress was empty.",
+                "siege_end": "🔄 Siege ended. Troops return to RESERVE.",
+                "fort_empty_end": "📭 Fortress empty. Siege over.",
+                "fort_remove": "↩️ Fortress removed. You can switch sides.",
+                "fort_remove_soft": "↩️ Fortress removed. (Your mountains remain).",
+                "click_siege": "CLICK TO EXECUTE SIEGE",
+                "click_pass": "CLICK TO PASS TURN",
+                "click_rescue": "CLICK TO RESCUE AND EXECUTE SIEGE",
+                "occupied_simple": "⛔ Tile occupied",
+                "water_error": "🌊 Not on water!",
+                "water_simple": "⛔ Water.",
+                "mountain_simple": "⛔ Mountain.",
+                "fortress_simple": "⛔ Fortress.",
+                "fortress_first_short": "⚠️ FORTRESS first.",
+                "no_fit_here": "It doesn't fit here!",
+                "⛔ Casilla ocupada": "⛔ Tile occupied",
+                "🌊 ¡Al agua no!": "🌊 Not on water!",
+                "⛔ Agua.": "⛔ Water.",
+                "⛔ Montaña.": "⛔ Mountain.",
+                "⛔ Fortaleza.": "⛔ Fortress.",
+                "⚠️ Primero la FORTALEZA.": "⚠️ FORTRESS first."
+            }
+        };
+
+        // Función mágica: Busca el texto español y devuelve el inglés
+        function autoTranslate(text) {
+            if ((currentLang || 'es') === 'es') return text; // Si estamos en español, no hacer nada
+
+            // 1. Búsqueda Inversa: ¿Existe este texto exacto en MESSAGES.es?
+            const esKeys = Object.keys(MESSAGES.es);
+            const foundKey = esKeys.find(key => MESSAGES.es[key] === text);
+
+            if (foundKey) {
+                return MESSAGES.en[foundKey];
+            }
+
+            // Si no lo encuentra (por ejemplo, tiene variables), devuelve el original
+            return text;
+        }
+
+        // Función manual (para los casos con variables)
+        function t(key, params = {}) {
+            const lang = currentLang || 'es';
+            let text = MESSAGES[lang][key] || MESSAGES['es'][key] || key;
+            for (const [k, v] of Object.entries(params)) {
+                text = text.replace(`{${k}}`, v);
+            }
+            return text;
+        }
+
         // --- FUNCIONES DE HOVER ACTUALIZADAS ---
 
         function handleUnitHover(type, army, r, c) {
@@ -1048,11 +1232,9 @@
 
             // 2. Feedback al usuario según el resultado
             if (validMovesCount === 0) {
-                // Mensaje de error/aviso si está totalmente bloqueada
-                showNotification(`🚫 ${type.toUpperCase()}: SIN MOVIMIENTOS POSIBLES (BLOQUEADA)`, true);
+                showNotification(t('help_blocked', { unit: type.toUpperCase() }), true);
             } else {
-                // Mensaje informativo estándar con el número de opciones
-                showNotification(`💡 Visualizando ${validMovesCount} movimientos posibles...`);
+                showNotification(t('help_visualizing', { count: validMovesCount }));
             }
         }
 
@@ -1077,23 +1259,25 @@
             const es = document.getElementById('rules-es');
             const en = document.getElementById('rules-en');
             const btn = document.getElementById('langToggleBtn');
-            const title = document.getElementById('rules-title'); // <--- NUEVO
+            const title = document.getElementById('rules-title');
 
             if (currentLang === 'es') {
-                // Cambiar a INGLÉS
                 es.style.display = 'none';
                 en.style.display = 'block';
                 btn.innerText = 'Leer en Español';
-                title.innerText = '📜 COTADREZ RULES'; // <--- CAMBIO DE TÍTULO
+                title.innerText = '📜 COTADREZ RULES';
                 currentLang = 'en';
             } else {
-                // Cambiar a ESPAÑOL
                 es.style.display = 'block';
                 en.style.display = 'none';
                 btn.innerText = 'Read in English';
-                title.innerText = '📜 REGLAMENTO';     // <--- CAMBIO DE TÍTULO
+                title.innerText = '📜 REGLAMENTO';
                 currentLang = 'es';
             }
+            // --- NUEVO: Refrescar la interfaz inmediatamente ---
+            updateStatusBar();
+            // También limpiamos cualquier tooltip que hubiera quedado
+            if (boardHelpTimer) clearTimeout(boardHelpTimer);
         }
 
         // Cerrar al hacer clic fuera del modal
@@ -1492,28 +1676,23 @@
             e.dataTransfer.dropEffect = 'move';
             if (!draggingMeta) return;
 
-            // 1. VARIABLES GLOBALES
             let isValid = true;
             let specialMessage = "";
             let cells = [];
 
             clearGhosts();
 
-            // =========================================================
-            // A. FASE DE JUEGO (Playing, Confirmación, Bonus)
-            // =========================================================
             if (gameState === 'playing' || gameState === 'siege-confirmation' || gameState === 'playing-chusma-bonus') {
                 const target = logicBoard[r][c];
                 const type = draggingMeta.type;
                 const army = draggingMeta.army;
                 const source = draggingMeta.source;
 
-                // Validaciones Generales
-                if (terrain[r][c] === 'water') { isValid = false; specialMessage = " (AGUA 🌊)"; }
-                if (target && target.type === 'fortaleza') { isValid = false; specialMessage = " (FORTALEZA 🏰)"; }
-                if (target && target.type === 'montana') { isValid = false; specialMessage = " (MONTAÑA 🏔️)"; }
+                // --- TRADUCCIÓN AQUÍ ---
+                if (terrain[r][c] === 'water') { isValid = false; specialMessage = t('err_water'); }
+                if (target && target.type === 'fortaleza') { isValid = false; specialMessage = t('err_fortress'); }
+                if (target && target.type === 'montana') { isValid = false; specialMessage = t('err_mountain'); }
 
-                // Lógica Refuerzo vs Movimiento
                 if (source === 'reserve') {
                     const fOrigin = fortressPos[army];
                     if (!isInExitZone(r, c, fOrigin)) isValid = false;
@@ -1524,12 +1703,10 @@
                         if (target.army === army && type !== 'lanceros') isValid = false;
                     }
                 }
-                cells = [{ r: r, c: c }]; // 1 casilla
+                cells = [{ r: r, c: c }];
             }
-            // =========================================================
-            // B. FASE DE DESPLIEGUE (Init, Deploy-P1, Deploy-P2)
-            // =========================================================
             else {
+                // FASE DESPLIEGUE
                 const army = draggingMeta.army;
                 const type = draggingMeta.type;
                 const isFortress = (type === 'fortaleza');
@@ -1537,38 +1714,31 @@
                 const hasFortress = fOrigin !== null;
                 const isMountain = (type === 'montana');
 
-                // 1. DEFINIR CELDAS (Ghosting 2x2 para Fortaleza)
                 cells = [];
                 if (isFortress) {
-                    if (r + 1 > 9 || c + 1 > 9) { // Se sale del mapa
+                    if (r + 1 > 9 || c + 1 > 9) {
                         isValid = false;
-                        specialMessage = " (FUERA DE LÍMITES 🚫)";
+                        specialMessage = t('err_limits'); // TRADUCCIÓN
                         cells = [{ r: r, c: c }];
                     } else {
-                        // Ocupa 4 celdas
                         cells.push({ r: r, c: c }, { r: r, c: c + 1 }, { r: r + 1, c: c }, { r: r + 1, c: c + 1 });
                     }
                 } else {
                     cells.push({ r: r, c: c });
                 }
 
-                // 2. VALIDACIONES DE DESPLIEGUE
-                // A. Fortaleza obligatoria primero
                 if (!isFortress && !hasFortress) isValid = false;
 
-                // B. Territorio correcto
                 if (p1Territory) {
                     const rowTerritory = getTerritory(r);
                     const myZone = (army === p1Color) ? p1Territory : (p1Territory === 'north' ? 'south' : 'north');
                     if (rowTerritory !== myZone) isValid = false;
                 }
 
-                // C. Anillo de salida (si no es fortaleza/montaña)
                 if (!isFortress && !isMountain && hasFortress) {
                     if (isValid && !isInExitZone(r, c, fOrigin)) isValid = false;
                 }
 
-                // D. Zona Prohibida Fortaleza (Bordes y centro)
                 if (isFortress) {
                     const invalidRows = [0, 4, 5, 9];
                     const invalidCols = [0, 9];
@@ -1576,64 +1746,43 @@
                     if (invalidCols.includes(c) || invalidCols.includes(c + 1)) isValid = false;
                 }
 
-                // E. Agua y Ocupación
                 for (let cell of cells) {
                     if (terrain[cell.r][cell.c] === 'water' && !isFortress) {
-                        isValid = false; specialMessage = " (AGUA 🌊)";
+                        isValid = false; specialMessage = t('err_water'); // TRADUCCIÓN
                     }
                     if (logicBoard[cell.r][cell.c] !== null) {
-                        isValid = false; specialMessage = " (OCUPADO ⛔)";
+                        isValid = false; specialMessage = t('err_occupied'); // TRADUCCIÓN
                     }
                 }
             }
 
-            // --- NUEVO: VALIDACIÓN DE SEGURIDAD EN TIEMPO REAL (GHOSTING) ---
-            // Si técnicamente puedes moverte ahí, comprobamos si es un suicidio.
-            // FIX: Solo simulamos si NO venimos de la reserva y si es válido geométricamente
             if (isValid && gameState.startsWith('playing') && draggingMeta.source === 'board') {
                 try {
-                    // BLINDAJE: Envolvemos esto en try-catch.
-                    // Si el cálculo de Jaque falla por cualquier bug interno, 
-                    // capturamos el error para que NO congele la barra de estado ni el ghosting.
-                    // Ante la duda (error), asumimos que es seguro (isValid sigue true) para dejar jugar.
-
-                    if (!isSimulatedMoveSafe(type, draggingMeta.originR, draggingMeta.originC, r, c, army)) {
+                    if (!isSimulatedMoveSafe(draggingMeta.type, draggingMeta.originR, draggingMeta.originC, r, c, draggingMeta.army)) {
                         isValid = false;
-                        specialMessage = " (JAQUE ⚠️)";
+                        specialMessage = t('err_check'); // TRADUCCIÓN
                     }
-                } catch (err) {
-                    console.warn("⚠️ Salto de seguridad en DragOver:", err);
-                    // No hacemos nada: isValid se mantiene true, así que se verá VERDE.
-                }
+                } catch (err) { }
             }
 
-            // =========================================================
-            // C. VISUALIZACIÓN FINAL (Común)
-            // =========================================================
             const className = isValid ? 'ghost-valid' : 'ghost-invalid';
             cells.forEach(cell => {
                 const tile = document.querySelector(`.tile[data-r="${cell.r}"][data-c="${cell.c}"]`);
                 if (tile) tile.classList.add(className);
             });
 
-            // VISUALIZACIÓN EN BARRA DE ESTADO (Coordenadas y Validez)
-            // Esto sobrescribe cualquier mensaje de Jaque/Asedio MOMENTÁNEAMENTE mientras arrastras
             const currentTileId = `${r}-${c}`;
-
-            // Quitamos la comprobación de lastHoveredTile estricta para forzar el repintado si cambia el estado
             lastHoveredTile = currentTileId;
 
             const coordName = getCoordinateName(r, c);
             const statusIcon = isValid ? "✅" : "⛔";
-            // Si hay mensaje especial (ej: AGUA), lo usamos. Si no, genérico.
-            const detailText = specialMessage ? specialMessage : (isValid ? "Movimiento Válido" : "Movimiento Inválido");
+            // TRADUCCIÓN FINAL
+            const detailText = specialMessage ? specialMessage : (isValid ? t('msg_valid') : t('msg_invalid'));
 
             const bar = document.getElementById('status-bar');
             bar.innerText = `${coordName} ${detailText} ${statusIcon}`;
-
-            // Forzamos colores de "semáforo" para el drag
-            bar.style.color = isValid ? '#2ecc71' : '#e74c3c'; // Verde o Rojo
-            bar.classList.remove('status-critical'); // Quitamos parpadeo mientras arrastras para leer mejor
+            bar.style.color = isValid ? '#2ecc71' : '#e74c3c';
+            bar.classList.remove('status-critical');
             bar.style.opacity = 1;
         }
 
@@ -1697,7 +1846,10 @@
                         reserves[data.army][t] = 0;
                     }
                 }
-                showNotification(`🔥 Asedio roto. ${capturedCount} capturados.`);
+                const msg = currentLang === 'en'
+                    ? `🔥 Siege broken. ${capturedCount} captured.`
+                    : `🔥 Asedio roto. ${capturedCount} capturados.`;
+                showNotification(msg);
                 gameState = 'playing'; besiegedArmy = null; turnColor = attackerArmy;
                 renderBoard(); updateInventories(); updateDungeons(); checkTurnStatus();
                 return;
@@ -1719,7 +1871,14 @@
                     if (reserves[data.army][data.type] > 0) {
                         reserves[data.army][data.type]--;
                         logicBoard[r][c] = { army: data.army, type: data.type };
-                        showNotification(`🆕 Refuerzos: ${data.type.toUpperCase()}`);
+
+                        // --- CAMBIO: Traducir nombre de unidad ---
+                        const unitName = t(data.type).toUpperCase();
+
+                        const msg = (currentLang === 'en')
+                            ? `🆕 Reinforcements: ${unitName}`
+                            : `🆕 Refuerzos: ${unitName}`;
+                        showNotification(msg);
                     } else { return; }
                 }
 
@@ -1942,12 +2101,17 @@
                         logicBoard[data.originR][data.originC] = null;
                         reserves[data.army][data.type]++;
 
-                        showNotification(`↩️ ${data.type.toUpperCase()} devuelta a la reserva.`);
+                        // --- CAMBIO: Traducir nombre ---
+                        const unitName = t(data.type).toUpperCase();
+
+                        const msg = (currentLang === 'en')
+                            ? `↩️ ${unitName} returned to reserve.`
+                            : `↩️ ${unitName} devuelta a la reserva.`;
+                        showNotification(msg);
                         renderBoard();
                         updateInventories();
                         return;
                     }
-                    // ---------------------------------------------------------------
 
                     showNotification("🛡️ Despliega junto a la Fortaleza", true); return;
                 }
@@ -1987,10 +2151,24 @@
 
                     if (isFortress) {
                         fortressPos[data.army] = { r: r, c: c };
-                        if (gameState === 'deploy-p1') showNotification(`J1: ${p1Color.toUpperCase()} controla el ${p1Territory.toUpperCase()}.`);
-                        else showNotification("🏰 Fortaleza establecida.");
+                        if (gameState === 'deploy-p1') {
+                            const zoneName = (currentLang === 'en' && p1Territory === 'north') ? "NORTH"
+                                : (currentLang === 'en' && p1Territory === 'south') ? "SOUTH"
+                                    : p1Territory.toUpperCase();
+
+                            const msg = (currentLang === 'en')
+                                ? `P1: ${p1Color.toUpperCase()} controls the ${zoneName}.`
+                                : `J1: ${p1Color.toUpperCase()} controla el ${zoneName}.`;
+                            showNotification(msg);
+                        } else showNotification("🏰 Fortaleza establecida.");
                     } else {
-                        showNotification(`Desplegado: ${data.type.toUpperCase()}`);
+                        // --- CAMBIO: Traducir nombre ---
+                        const unitName = t(data.type).toUpperCase();
+
+                        const msg = (currentLang === 'en')
+                            ? `Deployed: ${unitName}`
+                            : `Desplegado: ${unitName}`;
+                        showNotification(msg);
                     }
                 }
             } else if (data.source === 'board') {
@@ -2112,7 +2290,15 @@
 
             // 3. Pasar turno
             gameState = 'deploy-p2';
-            showNotification(`✅ Despliegue J1 Finalizado. Turno del JUGADOR 2 (${p2Color.toUpperCase()}).`);
+
+            // --- CAMBIO: Traducir color ---
+            const colorName = t(p2Color).toUpperCase();
+
+            const msg = (currentLang === 'en')
+                ? `✅ P1 Deployment Finished. PLAYER 2 Turn (${colorName}).`
+                : `✅ Despliegue J1 Finalizado. Turno del JUGADOR 2 (${colorName}).`;
+
+            showNotification(msg);
             renderBoard();
             updateInventories();
         }
@@ -2171,7 +2357,13 @@
 
             // 2. SEGUNDO: Notificamos SOLO si no hay una emergencia
             if (!isCheck) {
-                showNotification(`¡COMIENZA LA PARTIDA! Turno de ${turnColor.toUpperCase()}`);
+                // --- CAMBIO: Traducir color ---
+                const colorName = t(turnColor).toUpperCase();
+
+                const msg = (currentLang === 'en')
+                    ? `GAME START! ${colorName} Turn`
+                    : `¡COMIENZA LA PARTIDA! Turno de ${colorName}`;
+                showNotification(msg);
             }
         }
 
@@ -2254,46 +2446,43 @@
         }
 
         function getStatusText() {
-            // A. PRIORIDAD ABSOLUTA: Fin de juego o Inicio
+            // Traducciones simples de estados fijos
             if (gameState === 'game-over') return document.getElementById('status-bar').innerText;
-            if (gameState === 'init') return "Elige tu destino: Arrastra una Fortaleza para empezar. Mantén el ratón sobre cualquier unidad para Ayuda Visual";
+            if (gameState === 'init') return autoTranslate("Elige tu destino: Arrastra una Fortaleza para empezar. Mantén el ratón sobre cualquier unidad para Ayuda Visual");
 
-            const currentArmy = getArmyName(turnColor);
+            // Preparamos nombres
+            const rawArmy = getArmyName(turnColor);
+            // getArmyName devuelve "DEL NORTE", el autoTranslate lo pasará a "NORTH" si hace falta
+            const currentArmy = autoTranslate(rawArmy);
 
-            // B. FASES DE INTERACCIÓN FORZADA (El juego está en pausa esperando un click específico)
-            if (gameState === 'siege-prisoner-select') {
-                return `🔓 DEFENSA FALLIDA: ${currentArmy}, ¡SELECCIONA UN PRISIONERO PARA LIBERAR!`;
-            }
-            if (gameState === 'siege-confirmation') {
-                return `🎯 ASEDIO LISTO: ${currentArmy}, PULSA LA FORTALEZA PARA EJECUTAR O MUEVE TROPAS.`;
-            }
-            if (gameState === 'siege-resolution') {
-                return `🔥 ¡SACRIFICIO! EL EJÉRCITO ${currentArmy} DEBE SALVAR UNA PIEZA (EL RESTO MORIRÁ).`;
-            }
+            // Estados Especiales (Usamos textos hardcodeados en español para que autoTranslate los pille)
+            if (gameState === 'siege-prisoner-select')
+                return `🔓 ${currentArmy}: ` + (currentLang === 'en' ? "DEFENSE FAILED, SELECT PRISONER!" : "DEFENSA FALLIDA, ¡SELECCIONA UN PRISIONERO!");
 
-            // C. BONUS DE CHUSMA (Estado especial de medio turno)
-            if (gameState === 'playing-chusma-bonus') {
-                return `⚡ BONIFICACIÓN CHUSMA: Mueve otra Chusma o haz click en la misma para terminar.`;
-            }
+            if (gameState === 'siege-confirmation')
+                return `🎯 ${currentArmy}: ` + (currentLang === 'en' ? "SIEGE READY, CLICK FORTRESS!" : "ASEDIO LISTO, PULSA LA FORTALEZA.");
 
-            // D. ESTADOS DE ALERTA (Juego normal pero con peligro)
-            // 1. JAQUE (Prioridad alta)
-            if (isCheck) {
-                return `⚠️ ¡JAQUE AL REY ${currentArmy}! DEBES PROTEGERLO INMEDIATAMENTE. ⚠️`;
-            }
+            if (gameState === 'siege-resolution')
+                return `🔥 ${currentArmy}: ` + (currentLang === 'en' ? "SACRIFICE! SAVE ONE UNIT." : "¡SACRIFICIO! DEBE SALVAR UNA PIEZA.");
 
-            // 2. ASEDIO INMINENTE (Aviso pasivo: "Te están rodeando")
-            if (siegeStatus[turnColor] === true) {
-                return `🛡️ ¡ALERTA! LA FORTALEZA ${currentArmy} ESTÁ RODEADA. ROMPE EL CERCO O PERDERÁS TROPAS.`;
-            }
+            if (gameState === 'playing-chusma-bonus')
+                return (currentLang === 'en' ? "⚡ RABBLE BONUS: Move another or click to finish." : "⚡ BONIFICACIÓN CHUSMA: Mueve otra Chusma o haz click en la misma para terminar.");
 
-            // E. ESTADO ESTÁNDAR (Juego normal o despliegue)
+            // Estados de Alerta
+            if (isCheck)
+                return `⚠️ ${currentLang === 'en' ? "CHECK!" : "¡JAQUE!"} ${currentArmy} ⚠️`;
+
+            if (siegeStatus[turnColor] === true)
+                return `🛡️ ${currentArmy}: ` + (currentLang === 'en' ? "ALERT! FORTRESS SURROUNDED." : "¡ALERTA! FORTALEZA RODEADA.");
+
+            // Estado Estándar
             if (gameState.includes('deploy')) {
                 const player = (gameState === 'deploy-p1' ? p1Color : p2Color);
-                return `Fase Despliegue: ${player ? player.toUpperCase() : ''}`;
+                const pName = player ? player.toUpperCase() : '';
+                return (currentLang === 'en' ? `Deployment Phase: ${pName}` : `Fase Despliegue: ${pName}`);
             }
 
-            return `Turno ${currentArmy}`;
+            return (currentLang === 'en' ? `Turn ${currentArmy}` : `Turno ${currentArmy}`);
         }
 
         // Pinta el anillo de salida de la fortaleza del ejército indicado
@@ -2896,28 +3085,44 @@
         // Helper para terminar partida (si no la tenías ya de mis intentos anteriores)
         function finishGame(winnerArmy, reason = "") {
             gameState = 'game-over';
-            const winnerText = winnerArmy ? `VICTORIA DEL EJÉRCITO ${winnerArmy.toUpperCase()}` : "EMPATE";
+            // Si no se pasa reason (ej: tablas), usamos claves genéricas, 
+            // pero para no complicar, asumimos que reason viene ya traducido o usamos lógica simple:
+
+            let finalText = "";
+            if (winnerArmy) {
+                // Ganador
+                finalText = t('status_gameover', {
+                    reason: reason || "Checkmate",
+                    winner: t('status_win', { army: winnerArmy.toUpperCase() })
+                });
+            } else {
+                // Empate
+                finalText = t('status_draw');
+            }
+
             const bar = document.getElementById('status-bar');
-            bar.innerText = `🏁 FIN DE PARTIDA: ${reason}. ${winnerText}`;
+            bar.innerText = finalText;
             bar.style.color = winnerArmy ? '#2ecc71' : '#fff';
             bar.style.fontWeight = 'bold';
         }
 
         // Actualiza la barra de estado gestionando prioridades y colores
         function showNotification(msg, isError = false) {
-            // SI HAY EMERGENCIA (Jaque/Asedio), NO mostramos notificaciones triviales.
-            // Forzamos updateStatusBar por si acaso, y salimos.
+            // Verificar estado crítico primero
             if (isCheck || siegeStatus[turnColor] === true || gameState === 'siege-resolution' || gameState === 'siege-confirmation') {
                 updateStatusBar();
                 return;
             }
 
             const bar = document.getElementById('status-bar');
-
-            // 1. ACTIVAR BLOQUEO DE ESTADO
             isNotificationActive = true;
 
-            bar.innerText = msg;
+            // --- MAGIA AQUÍ: TRADUCCIÓN AUTOMÁTICA ---
+            // Intentamos traducir el mensaje 'msg'. Si es un texto fijo español, lo cambiará a inglés.
+            // Si ya viene traducido (porque usamos t()), lo dejará igual.
+            bar.innerText = autoTranslate(msg);
+            // -----------------------------------------
+
             bar.classList.remove('status-critical');
             bar.style.color = isError ? '#e74c3c' : '#f1c40f';
 
@@ -2927,8 +3132,8 @@
             if (notificationTimer) clearTimeout(notificationTimer);
 
             notificationTimer = setTimeout(() => {
-                isNotificationActive = false; // Liberar bloqueo
-                updateStatusBar();            // Restaurar estado real del juego
+                isNotificationActive = false;
+                updateStatusBar();
                 bar.style.opacity = 1;
                 notificationTimer = null;
             }, 3000);
@@ -2978,16 +3183,15 @@
 
         // Traduce el color del ejército a su territorio (Norte/Sur)
         function getArmyName(armyColor) {
-            // 1. SEGURIDAD: Si es null (inicio), devolvemos cadena vacía para evitar crash
             if (!armyColor) return "";
 
-            // 2. Si aún no hay territorios definidos, devolvemos el color genérico
-            if (!p1Territory) return "DE " + armyColor.toUpperCase();
+            // Si no hay territorios, devolvemos formato genérico traducido
+            if (!p1Territory) return t('of_color', { color: armyColor.toUpperCase() });
 
             const isP1 = (armyColor === p1Color);
             const isNorth = isP1 ? (p1Territory === 'north') : (p1Territory === 'south');
 
-            return isNorth ? "DEL NORTE" : "DEL SUR";
+            return isNorth ? t('north') : t('south');
         }
 
         // Ejecuta el asedio cuando no hay prisioneros que rescatar

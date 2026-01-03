@@ -585,7 +585,7 @@
 
         // --- 4. LÓGICA DE ARRASTRAR Y SOLTAR ---
 
-        function handleDragStart(e, source, army, type, r = null, c = null) {
+function handleDragStart(e, source, army, type, r = null, c = null) {
 
             if (gameState === 'playing') {
                 // Si el juego ha terminado, nadie mueve nada
@@ -597,8 +597,14 @@
                 }
             }
 
-            // 1. Guardamos metadatos (AÑADIDO: source)
-            draggingMeta = { type: type, army: army, source: source };
+            // 1. Guardamos metadatos (AÑADIDO: coordenadas de origen)
+            draggingMeta = {
+                type: type,
+                army: army,
+                source: source,
+                originR: r, // <--- NUEVO
+                originC: c  // <--- NUEVO
+            };
 
             // 2. Datos estándar para el Drop
             const data = { source, army, type, originR: r, originC: c };
@@ -606,12 +612,12 @@
             e.dataTransfer.effectAllowed = 'move';
 
             // --- NUEVO: RESALTAR ANILLO SI VIENE DE RESERVA ---
+            // (La lógica está DENTRO de la función, antes de la llave de cierre)
             if (source === 'reserve' && type !== 'montana') {
                 highlightFortressRing(army);
             }
-
         }
-
+        
         // 2. Permitir soltar (El navegador bloquea por defecto, hay que prevenirlo)
         // Función auxiliar para limpiar fantasmas previos
         function clearGhosts() {
@@ -652,15 +658,22 @@
                     if (target !== null) isValid = false;
 
                 } else {
-                    // --- MOVIMIENTO NORMAL ---
-                    if (target && isValid) {
+                    // --- MOVIMIENTO NORMAL (TABLERO -> TABLERO) ---
+
+                    // 1. Validar Geometría (Usa la nueva función)
+                    // Usamos las coordenadas guardadas en draggingMeta
+                    if (!isValidMove(type, draggingMeta.originR, draggingMeta.originC, r, c)) {
+                        isValid = false;
+                    }
+
+                    // 2. Validar Ocupación (Solo si la geometría es válida)
+                    if (isValid && target) {
                         if (target.army === army) {
                             if (type !== 'lancero') isValid = false;
                         }
                         // Enemigo = Captura (Válido)
                     }
                 }
-
                 // Pintar
                 const className = isValid ? 'ghost-valid' : 'ghost-invalid';
                 const tile = document.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
@@ -861,11 +874,16 @@
                 else {
                     const target = logicBoard[r][c];
 
-                    // Validaciones de terreno
+                    // Validaciones de terreno globales
                     if (terrain[r][c] === 'water') { showNotification("⛔ No puedes moverte al agua."); return; }
                     if (target && target.type === 'montana') { showNotification("⛔ No puedes atravesar montañas."); return; }
                     if (target && target.type === 'fortaleza') { showNotification("⛔ No puedes ocupar una fortaleza."); return; }
 
+                    // --- NUEVA VALIDACIÓN CENTRALIZADA ---
+                    if (!isValidMove(data.type, data.originR, data.originC, r, c)) {
+                        showNotification("⛔ Movimiento ilegal"); // Mensaje genérico
+                        return;
+                    }
                     if (target) {
                         if (target.army === data.army) {
                             // --- ALIADO (LANCERO) ---
@@ -1165,6 +1183,23 @@
             });
         }
 
+        // Valida SOLO la geometría del movimiento (Tablero -> Tablero)
+        function isValidMove(type, r1, c1, r2, c2) {
+            const dR = Math.abs(r2 - r1);
+            const dC = Math.abs(c2 - c1);
+
+            // --- REGLAS POR TIPO ---
+
+            if (type === 'rey') {
+                // Rey: Máximo 1 casilla en cualquier dirección
+                return (dR <= 1 && dC <= 1) && (dR + dC > 0);
+            }
+
+            // ... Aquí añadiremos else if (type === 'caballo') ...
+
+            // Por defecto (resto de piezas): Movimiento libre (Sandbox)
+            return true;
+        }
 
     </script>
 </body>

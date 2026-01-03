@@ -387,6 +387,135 @@
             /* Rojo */
             box-shadow: inset 0 0 0 2px #c0392b;
         }
+
+        /* --- VENTANA MODAL Y REGLAS --- */
+        .modal {
+            display: none;
+            /* Oculto por defecto */
+            position: fixed;
+            z-index: 2000;
+            /* Por encima de todo */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.85);
+            /* Fondo oscuro */
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: #2c3e50;
+            margin: 5% auto;
+            padding: 20px;
+            border: 2px solid var(--c-gold);
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            color: #ecf0f1;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #7f8c8d;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            color: #bdc3c7;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: var(--c-red);
+        }
+
+        /* Botón de idioma (dentro del modal) */
+        .btn-lang {
+            background: transparent;
+            border: 1px solid #7f8c8d;
+            color: #bdc3c7;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-right: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-lang:hover {
+            border-color: var(--c-gold);
+            color: var(--c-gold);
+            background-color: rgba(241, 196, 15, 0.1);
+        }
+
+        /* Botón principal (Footer) */
+        footer {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .btn-rules {
+            background: none;
+            border: 1px solid var(--c-gold);
+            color: var(--c-gold);
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-rules:hover {
+            background-color: var(--c-gold);
+            color: #1a252f;
+            box-shadow: 0 0 10px var(--c-gold);
+        }
+
+        /* Formato de texto */
+        .rules-container h3 {
+            color: var(--c-gold);
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        .rules-container h4 {
+            color: #3498db;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        .rules-container ul,
+        .rules-container ol {
+            padding-left: 20px;
+        }
+
+        .rules-container li {
+            margin-bottom: 5px;
+        }
+
+        /* Ocultar inglés por defecto */
+        #rules-en {
+            display: none;
+        }
+
+        #rules-es {
+            display: block;
+        }
     </style>
 </head>
 
@@ -417,6 +546,131 @@
             <div class="dungeon-section">
                 <div class="dungeon-label">Mazmorra</div>
                 <div class="dungeon-list" id="grave-negro"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <button class="btn-rules" onclick="toggleRules()">📜 Reglas / Rules</button>
+    </footer>
+
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="rules-title" style="margin:0; color: var(--c-gold);">📜 REGLAMENTO DEL COTADREZ</h2>
+                <div style="display: flex; align-items: center;">
+                    <button id="langToggleBtn" class="btn-lang" onclick="toggleLanguage()">Read in English</button>
+                    <span class="close-btn" onclick="toggleRules()">&times;</span>
+                </div>
+            </div>
+
+            <div id="rules-es" class="rules-container">
+                <h3>🎯 OBJETIVO</h3>
+                <p>El objetivo es simple y brutal: <strong>Capturar al Rey enemigo</strong>. Puedes lograrlo mediante un
+                    <strong>Jaque Mate</strong> tradicional en el tablero o asediando su fortaleza hasta obligarle a
+                    salir y aniquilarlo.
+                </p>
+
+                <h3>1. FASE DE DESPLIEGUE (Niebla de Guerra)</h3>
+                <ol>
+                    <li><strong>La Fortaleza:</strong> Debes colocarla primero. Define tu territorio (Norte o Sur).</li>
+                    <li><strong>Las Tropas:</strong> Arrastra tus unidades desde la reserva al <strong>anillo de
+                            Salida</strong> (las 12 casillas que rodean tu Fortaleza).</li>
+                    <li><strong>Las Montañas:</strong> Se pueden colocar en cualquier lugar de tu territorio.</li>
+                    <li><strong>¡A la Batalla!:</strong> El Jugador 2 despliega "a ciegas".</li>
+                </ol>
+
+                <h3>2. MOVIMIENTO Y COMBATE</h3>
+                <p>Las piezas capturadas van a la <strong>Mazmorra</strong> del enemigo (¡podrás rescatarlas luego!).
+                </p>
+
+                <h4>🛡️ Unidades Básicas</h4>
+                <ul>
+                    <li><strong>👑 Rey:</strong> Se mueve 1 casilla. Pieza clave.</li>
+                    <li><strong>🏚️ Chusma:</strong> Mueve 1 casilla (+). <strong>"Marcha Forzada":</strong> Mueve 2
+                        chusmas distintas en un turno.</li>
+                    <li><strong>🔱 Lancero:</strong> Mueve 1 casilla (+). <strong>"Relevo":</strong> Intercambia
+                        posición con aliado.</li>
+                    <li><strong>🏹 Arquero:</strong> Mueve 1 casilla (X). <strong>"Salto":</strong> Salta 2 casillas
+                        para matar.</li>
+                </ul>
+
+                <h4>🐎 Caballería y Bestias</h4>
+                <ul>
+                    <li><strong>🐴 Cab. Ligera:</strong> Salto en "L" (3x1). Salta tropas.</li>
+                    <li><strong>🛡️ Cab. Pesada:</strong> Salto en "L" corta (2x1). Solo atraviesa aliados.</li>
+                    <li><strong>🐘 Elefante:</strong> Mueve como Torre (+). <strong>"Piel Dura":</strong> Inmune a
+                        ataques individuales (necesita 2+ enemigos o Dragón).</li>
+                    <li><strong>🐉 Dragón:</strong> Mueve como Reina (Todas). Vuela sobre obstáculos (no sobre
+                        unidades).</li>
+                </ul>
+
+                <h4>⚙️ Armas de Asedio</h4>
+                <ul>
+                    <li><strong>☄️ Trabuquete:</strong> Mueve Diagonal. Dispara Recto (Infinito).</li>
+                    <li><strong>🦂 Escorpión:</strong> Mueve Recto. Dispara Diagonal (Infinito).
+                        <strong>"Perforar"</strong>.
+                    </li>
+                </ul>
+
+                <h3>3. MECÁNICA DE ASEDIO</h3>
+                <p><strong>PASO 1: AMENAZA</strong><br>Coloca <strong>2+ unidades</strong> rodeando la Fortaleza
+                    enemiga.</p>
+                <p><strong>PASO 2: DEFENSA</strong><br>El defensor tiene <strong>1 turno</strong> para romper el cerco.
+                </p>
+                <p><strong>PASO 3: EJECUCIÓN</strong><br>Si falla, el atacante pulsa la Fortaleza para EJECUTAR.</p>
+                <p><strong>PASO 4: CONSECUENCIAS</strong></p>
+                <ul>
+                    <li><strong>Rescate:</strong> El atacante libera 1 prisionero. Sus tropas vuelven a casa.</li>
+                    <li><strong>Sacrificio:</strong> El defensor salva 1 unidad (si hubo rescate) o <strong>PIERDE
+                            TODO</strong> (si no hubo).</li>
+                </ul>
+            </div>
+
+            <div id="rules-en" class="rules-container">
+                <h3>🎯 OBJECTIVE</h3>
+                <p>The objective is simple and brutal: <strong>Capture the enemy King</strong>. You can achieve this
+                    through a traditional <strong>Checkmate</strong> or by besieging their fortress.</p>
+
+                <h3>1. DEPLOYMENT PHASE (Fog of War)</h3>
+                <ol>
+                    <li><strong>The Fortress:</strong> Place it first to define territory.</li>
+                    <li><strong>The Troops:</strong> Deploy in the <strong>Exit Ring</strong> surrounding your Fortress.
+                    </li>
+                    <li><strong>The Mountains:</strong> Place anywhere in your territory.</li>
+                </ol>
+
+                <h3>2. MOVEMENT AND COMBAT</h3>
+                <h4>🛡️ Basic Units</h4>
+                <ul>
+                    <li><strong>👑 King:</strong> Moves 1 square. Key piece.</li>
+                    <li><strong>🏚️ Rabble:</strong> Moves 1 square (+). <strong>"Forced March":</strong> Move 2
+                        Rabbles.</li>
+                    <li><strong>🔱 Lancer:</strong> Moves 1 square (+). <strong>"Relay":</strong> Swap with ally.</li>
+                    <li><strong>🏹 Archer:</strong> Moves 1 square (X). <strong>"Jump":</strong> Jumps 2 squares to
+                        capture.</li>
+                </ul>
+
+                <h4>🐎 Cavalry and Beasts</h4>
+                <ul>
+                    <li><strong>🐴 Light Cavalry:</strong> "L" jump (3x1). Jumps over troops.</li>
+                    <li><strong>🛡️ Heavy Cavalry:</strong> Short "L" (2x1). Through allies only.</li>
+                    <li><strong>🐘 Elephant:</strong> Rook-move. <strong>"Thick Skin":</strong> Needs 2+ threats or
+                        Dragon.</li>
+                    <li><strong>🐉 Dragon:</strong> Queen-move. Flies over obstacles.</li>
+                </ul>
+
+                <h4>⚙️ Siege Weapons</h4>
+                <ul>
+                    <li><strong>☄️ Trebuchet:</strong> Moves Diagonal. Fires Orthogonal.</li>
+                    <li><strong>🦂 Scorpion:</strong> Moves Orthogonal. Fires Diagonal.</li>
+                </ul>
+
+                <h3>3. SIEGE MECHANIC</h3>
+                <p><strong>STEP 1: THREAT</strong> (2+ units at gate).</p>
+                <p><strong>STEP 2: DEFENSE</strong> (1 turn to break siege).</p>
+                <p><strong>STEP 3: EXECUTION</strong> (Click Fortress).</p>
+                <p><strong>STEP 4: CONSEQUENCES</strong> (Rescue & Sacrifice).</p>
             </div>
         </div>
     </div>
@@ -482,6 +736,46 @@
         let p2Color = null;
         let p1Territory = null; // 'north' (filas 0-4) o 'south' (filas 5-9)
         let turnColor = null; // 'rojo' o 'negro'
+
+
+        // --- 0. INTERFAZ DE AYUDA ---
+        let currentLang = 'es';
+
+        function toggleRules() {
+            const modal = document.getElementById("rulesModal");
+            modal.style.display = (modal.style.display === "block") ? "none" : "block";
+        }
+
+        function toggleLanguage() {
+            const es = document.getElementById('rules-es');
+            const en = document.getElementById('rules-en');
+            const btn = document.getElementById('langToggleBtn');
+            const title = document.getElementById('rules-title'); // <--- NUEVO
+
+            if (currentLang === 'es') {
+                // Cambiar a INGLÉS
+                es.style.display = 'none';
+                en.style.display = 'block';
+                btn.innerText = 'Leer en Español';
+                title.innerText = '📜 COTADREZ RULES'; // <--- CAMBIO DE TÍTULO
+                currentLang = 'en';
+            } else {
+                // Cambiar a ESPAÑOL
+                es.style.display = 'block';
+                en.style.display = 'none';
+                btn.innerText = 'Read in English';
+                title.innerText = '📜 REGLAMENTO';     // <--- CAMBIO DE TÍTULO
+                currentLang = 'es';
+            }
+        }
+
+        // Cerrar al hacer clic fuera del modal
+        window.onclick = function (event) {
+            const modal = document.getElementById("rulesModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
 
         // --- 2. INICIALIZACIÓN ---
         function init() {

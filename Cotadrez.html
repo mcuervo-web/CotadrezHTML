@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cotadrez - Caballería Pesada Refinada</title>
+    <title>Cotadrez - Caballería Pesada Especialista</title>
     <style>
         body { background-color: #1a252f; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .game-layout { display: flex; gap: 30px; align-items: flex-start; margin-top: 20px; }
@@ -129,15 +129,29 @@ function updateInventories() {
     });
 }
 
-// Comprueba si una casilla es un obstáculo estructural (agua, montaña o fortaleza)
-function isStructuralObstacle(r, c) {
+// Función de detección de obstáculos personalizada para la Pesada
+function isObstacleForHeavy(r, c, myArmy) {
     if (r < 0 || r > 9 || c < 0 || c > 9) return true;
     if (waterCoords.includes(`${r},${c}`)) return true;
     const t = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
     if (!t) return true;
     const img = t.querySelector('.piece-on-board');
-    if (img && (img.dataset.pieceId === 'montana' || img.dataset.pieceId === 'fortaleza')) return true;
+    if (img) {
+        // Estructuras siempre bloquean
+        if (img.dataset.pieceId === 'montana' || img.dataset.pieceId === 'fortaleza') return true;
+        // ENEMIGOS son obstáculos para el camino intermedio de la pesada
+        if (img.dataset.army !== myArmy) return true;
+    }
     return false;
+}
+
+// Obstáculos comunes (estructuras)
+function isStructuralObstacle(r, c) {
+    if (r < 0 || r > 9 || c < 0 || c > 9) return true;
+    if (waterCoords.includes(`${r},${c}`)) return true;
+    const t = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+    const img = t ? t.querySelector('.piece-on-board') : null;
+    return (img && (img.dataset.pieceId === 'montana' || img.dataset.pieceId === 'fortaleza'));
 }
 
 function handleDragOver(e) {
@@ -168,46 +182,55 @@ function handleDragOver(e) {
             const or = parseInt(draggingOriginTile.dataset.row), oc = parseInt(draggingOriginTile.dataset.col);
             const dr = Math.abs(r - or), dc = Math.abs(c - oc);
 
-            // 1. REGLA UNIVERSAL DE ATERRIZAJE (Combate): 
-            // No se puede aterrizar en agua, montaña o fortaleza, ni sobre un aliado.
+            // Aterrizaje universal
             if (this.classList.contains('water') && !p.ignoraAgua) esValido = false;
             else if (targetImg && (targetImg.dataset.pieceId === 'fortaleza' || targetImg.dataset.pieceId === 'montana')) esValido = false;
             else if (targetImg && targetImg.dataset.army === draggingArmy && draggingPieceId !== "lanceros") esValido = false;
 
-            // 2. REGLAS ESPECÍFICAS DE MOVIMIENTO
+            // Lógica Pesada (L con enemigos como muros)
             else if (draggingPieceId === "c_pesada") {
                 if ((dr === 2 && dc === 1) || (dr === 1 && dc === 2)) {
-                    // El caballo salta piezas, pero es bloqueado por estructuras en su camino en "L"
-                    let p1B = false, p2B = false; // p1: Recto-Giro, p2: Giro-Recto
+                    let path1B = false, path2B = false;
                     if (dr === 2) { 
-                        const stepR = (r - or) / 2;
-                        p1B = isStructuralObstacle(or + stepR, oc) || isStructuralObstacle(or + (stepR*2), oc);
-                        p2B = isStructuralObstacle(or, c) || isStructuralObstacle(or + stepR, c);
+                        const sR = (r - or) / 2;
+                        path1B = isObstacleForHeavy(or + sR, oc, draggingArmy) || isObstacleForHeavy(or + (sR*2), oc, draggingArmy);
+                        path2B = isObstacleForHeavy(or, c, draggingArmy) || isObstacleForHeavy(or + sR, c, draggingArmy);
                     } else { 
-                        const stepC = (c - oc) / 2;
-                        p1B = isStructuralObstacle(or, oc + stepC) || isStructuralObstacle(or, oc + (stepC*2));
-                        p2B = isStructuralObstacle(r, oc) || isStructuralObstacle(r, oc + stepC);
+                        const sC = (c - oc) / 2;
+                        path1B = isObstacleForHeavy(or, oc + sC, draggingArmy) || isObstacleForHeavy(or, oc + (sC*2), draggingArmy);
+                        path2B = isObstacleForHeavy(r, oc, draggingArmy) || isObstacleForHeavy(r, oc + sC, draggingArmy);
                     }
-                    if (p1B && p2B) esValido = false; // Solo si ambos están bloqueados por estructuras
+                    if (path1B && path2B) esValido = false;
                 } else if (!(r === or && c === oc)) esValido = false;
-            } 
+            }
+            // Lógica Ligera (L Diagonal con estructuras como muros)
+            else if (draggingPieceId === "c_ligera") {
+                if ((dr === 3 && dc === 1) || (dr === 1 && dc === 3)) {
+                    const sR = (r - or) > 0 ? 1 : -1, sC = (c - oc) > 0 ? 1 : -1;
+                    let p1B = false, p2B = false;
+                    if (dr === 3) {
+                        p1B = isStructuralObstacle(or + sR, oc + sC) || isStructuralObstacle(or + sR*2, oc + sC*2);
+                        p2B = isStructuralObstacle(or + sR, oc - sC) || isStructuralObstacle(or + sR*2, oc); 
+                    } else {
+                        p1B = isStructuralObstacle(or + sR, oc + sC) || isStructuralObstacle(or + sR*2, oc + sC*2);
+                        p2B = isStructuralObstacle(or - sR, oc + sC) || isStructuralObstacle(or, oc + sC*2);
+                    }
+                    if (p1B && p2B) esValido = false;
+                } else if (!(r === or && c === oc)) esValido = false;
+            }
             else if (draggingPieceId === "arqueros") {
                 if (dr === dc && dr >= 1 && dr <= 2) {
-                    if (!targetImg && dr === 1) esValido = true;
-                    else if (targetImg && targetImg.dataset.army !== draggingArmy) {
-                        if (dr === 1) esValido = true;
-                        if (dr === 2) {
-                            const mR = (r+or)/2, mC = (c+oc)/2;
-                            const midTile = document.querySelector(`[data-row="${mR}"][data-col="${mC}"]`);
-                            if (midTile.querySelector('.piece-on-board') || midTile.classList.contains('water')) esValido = false;
-                        }
-                    } else esValido = false;
+                    if (targetImg && targetImg.dataset.army === draggingArmy) esValido = false;
+                    else if (dr === 2) {
+                        const mR = (r+or)/2, mC = (c+oc)/2;
+                        const midT = document.querySelector(`[data-row="${mR}"][data-col="${mC}"]`);
+                        if (midT.querySelector('.piece-on-board') || midT.classList.contains('water')) esValido = false;
+                    }
                 } else if (!(r === or && c === oc)) esValido = false;
             } 
             else if (dr + dc === 1) {
-                // Chusma y Lanceros
-                if (draggingPieceId === "chusma" && chusmasMovidasEsteTurno === 1 && draggingOriginTile.querySelector('img').dataset.groupId === ultimaChusmaGid) esValido = false;
-                if (draggingPieceId === "lanceros" && targetImg && targetImg.dataset.army === draggingArmy) esValido = true; // Permuta
+                if (draggingPieceId === "chusma" && chusmasMovidasEsteTurno === 1 && draggingOriginTile.querySelector('img').dataset.groupId === ultimaChusmaGid && (r !== or || c !== oc)) esValido = false;
+                if (chusmasMovidasEsteTurno === 1 && draggingPieceId !== "chusma") esValido = false;
             }
             else if (r === or && c === oc) esValido = true;
             else esValido = false;
@@ -247,7 +270,7 @@ function handleDrop(e) {
         let captura = false, permuta = false;
 
         if (targetImg) {
-            if (targetImg.dataset.army !== draggingArmy) {
+            if (targetImg.dataset.army !== draggingArmy && targetImg.dataset.pieceId !== 'fortaleza') {
                 mazmorra[draggingArmy].push(targetImg.dataset.pieceId);
                 document.querySelectorAll(`[data-group-id="${targetImg.dataset.groupId}"]`).forEach(el => el.remove());
                 captura = true;
@@ -260,7 +283,7 @@ function handleDrop(e) {
             return;
         }
         this.appendChild(myImg);
-        if (captura || permuta || ["lanceros", "arqueros", "c_pesada"].includes(draggingPieceId)) finalizarTurnoCombate();
+        if (captura || permuta || ["lanceros", "arqueros", "c_pesada", "c_ligera"].includes(draggingPieceId)) finalizarTurnoCombate();
         else if (draggingPieceId === "chusma") {
             chusmasMovidasEsteTurno++; ultimaChusmaGid = myImg.dataset.groupId;
             const chT = document.querySelectorAll(`.piece-on-board[data-army="${turnoActual}"][data-piece-id="chusma"]`).length;

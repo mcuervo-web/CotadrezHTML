@@ -440,7 +440,9 @@
 
         let isBesieged = false; // Nueva bandera para el estado de Asedio
 
-        let currentThreatMap = null; // Guardará el mapa de calor actual
+        let currentThreatMap = null; // Mapa Defensivo (Dónde me atacan)
+
+        let currentAttackMap = null; // NUEVO: Mapa Ofensivo (Dónde ataco yo)
 
         let isCheck = false; // Nueva bandera para el estado de Jaque
 
@@ -719,10 +721,11 @@
                 }
             }
 
-            // CALCULAR AMENAZAS ENEMIGAS ---
-            // Si soy rojo, quiero saber dónde ataca el negro para evitar esas casillas
+            // CALCULAR MAPAS DE INFLUENCIA
             const enemy = (army === 'rojo') ? 'negro' : 'rojo';
-            currentThreatMap = getThreatMap(enemy);
+
+            currentThreatMap = getThreatMap(enemy); // Para que mi Rey no se suicide
+            currentAttackMap = getThreatMap(army);  // Para coordinar ataques (Elefante)
 
             // 1. Guardamos metadatos (AÑADIDO: coordenadas de origen)
             draggingMeta = {
@@ -995,6 +998,16 @@
 
                     if (target && target.type === 'montana') { showNotification("⛔ No puedes atravesar montañas."); return; }
                     if (target && target.type === 'fortaleza') { showNotification("⛔ No puedes ocupar una fortaleza."); return; }
+
+                    // --- NUEVO: AVISO ESPECÍFICO DE ELEFANTE ---
+                    // Si intentamos capturar un elefante sin ser dragón y sin apoyo...
+                    if (target && target.type === 'elefante' && target.army !== data.army && data.type !== 'dragon') {
+                        // Usamos el mapa calculado al inicio del arrastre
+                        if (!currentAttackMap || currentAttackMap[r][c] < 2) {
+                            showNotification("🐘 ¡IMPOSIBLE! Necesitas apoyo (2+ unidades) o un Dragón para cazar al Elefante.");
+                            return; // Cortamos aquí para que no salga el error genérico
+                        }
+                    }
 
                     // 2. Validación Geométrica
                     if (!isValidMove(data.type, data.originR, data.originC, r, c)) {
@@ -1388,6 +1401,26 @@
             const dR = Math.abs(r2 - r1);
             const dC = Math.abs(c2 - c1);
 
+            // --- 0. REGLA ESPECIAL: CAPTURA DE ELEFANTES ---
+            const myPiece = logicBoard[r1][c1];
+            const target = logicBoard[r2][c2];
+
+            if (myPiece && target && target.type === 'elefante' && target.army !== myPiece.army) {
+                // A. El Dragón es el depredador natural (Captura directa)
+                if (type === 'dragon') {
+                    // Pasa sin restricciones, permitimos que valide la geometría abajo
+                }
+                // B. El resto necesita "Caza en Grupo" (Al menos 2 unidades amenazando)
+                else {
+                    // Si no hay mapa o no hay suficientes atacantes...
+                    if (!currentAttackMap || currentAttackMap[r2][c2] < 2) {
+                        // ¡AVISO AL JUGADOR!
+                        /* showNotification("🐘 ¡IMPOSIBLE! Necesitas apoyo (2+ unidades) o un Dragón para cazar al Elefante."); */
+                        return false;
+                    }
+                }
+            }
+
             // --- 1. REY (1 casilla alrededor) ---
             if (type === 'rey') {
                 // NUEVO: No puede moverse a una casilla amenazada (Suicidio)
@@ -1741,8 +1774,10 @@
 
         // Verifica si el jugador del turno actual (turnColor) ha perdido o empatado
         function checkTurnStatus() {
+            // 1. Calcular mapas
             const enemy = (turnColor === 'rojo') ? 'negro' : 'rojo';
-            const threatMap = getThreatMap(enemy);
+            const threatMap = getThreatMap(enemy); // Amenazas contra mí
+            const attackMap = getThreatMap(turnColor); // Mis amenazas (Para ver si puedo matar elefantes)
 
             // A. BUSCAR AL REY Y CHEQUEAR JAQUE
             let kingPos = null;
@@ -1794,6 +1829,7 @@
 
             // D. VERIFICAR MOVIMIENTOS LEGALES (MATE / AHOGADO)
             currentThreatMap = threatMap;
+            currentAttackMap = attackMap; // <--- IMPORTANTE: Actualizar el mapa ofensivo para la simulación
             let hasMoves = false;
 
             outerLoop:

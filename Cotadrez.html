@@ -3926,99 +3926,27 @@
         function activateDebugMode() {
             if (!confirm(t('debug_confirm'))) return;
 
-            console.log("🛠️ Ejecutando Despliegue Caótico...");
+            console.log("🛠️ Ejecutando Despliegue IA v6.0 (Influencia)...");
 
             init();
+            // Limpieza inicial de variables globales
             logicBoard = Array(10).fill().map(() => Array(10).fill(null));
             fortressPos = { rojo: null, negro: null };
             dungeons = { rojo: [], negro: [] };
             shotHighlights = [];
 
+            // Configuración de bandos
             p1Color = 'rojo'; p1Territory = 'north';
             p2Color = 'negro';
 
-            // 1. COLOCAR FORTALEZAS (Mantenemos esto para que sea jugable)
-            const validRowsNorth = [1, 2];
-            const validRowsSouth = [6, 7];
+            // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
+            // En lugar de colocar cosas manualmente paso a paso,
+            // llamamos al "Cerebro" que ya sabe hacerlo todo (Fortaleza + Montañas + Tropas)
 
-            const placeFortress = (army, validRows) => {
-                const r = validRows[Math.floor(Math.random() * validRows.length)];
-                const c = Math.floor(Math.random() * 7) + 1;
+            setupAI_Smart('rojo');
+            setupAI_Smart('negro');
 
-                logicBoard[r][c] = { army, type: 'fortaleza' };
-                logicBoard[r][c + 1] = { army, type: 'fortaleza' };
-                logicBoard[r + 1][c] = { army, type: 'fortaleza' };
-                logicBoard[r + 1][c + 1] = { army, type: 'fortaleza' };
-                fortressPos[army] = { r, c };
-                reserves[army]['fortaleza'] = 0;
-            };
-
-            placeFortress('rojo', validRowsNorth);
-            placeFortress('negro', validRowsSouth);
-
-            // 2. COLOCAR TROPAS (Lógica de "Bolsa Revuelta")
-            const placeTroops = (army) => {
-                const fort = fortressPos[army];
-                let validSpots = [];
-
-                // A. Identificar todos los huecos disponibles
-                for (let r = 0; r < 10; r++) {
-                    for (let c = 0; c < 10; c++) {
-                        if (isInExitZone(r, c, fort) && logicBoard[r][c] === null && terrain[r][c] !== 'water') {
-                            validSpots.push({ r, c });
-                        }
-                    }
-                }
-
-                // B. Crear la "Bolsa de Unidades" 
-                // (Metemos TODAS las fichas de la reserva en un mismo array plano)
-                let unitPool = [];
-                for (const [type, count] of Object.entries(reserves[army])) {
-                    if (type === 'montana' || type === 'fortaleza') continue; // Edificios no
-                    for (let i = 0; i < count; i++) {
-                        unitPool.push(type);
-                    }
-                }
-
-                // C. AGITAR EL SACO (Barajar aleatoriamente las unidades)
-                unitPool.sort(() => Math.random() - 0.5);
-
-                // D. Barajar también los sitios (Doble aleatoriedad)
-                validSpots.sort(() => Math.random() - 0.5);
-
-                // E. Rellenar hasta que se acaben los huecos o las fichas
-                while (validSpots.length > 0 && unitPool.length > 0) {
-                    const spot = validSpots.pop();
-                    const type = unitPool.pop(); // Sacamos una ficha al azar del saco
-
-                    logicBoard[spot.r][spot.c] = { army, type };
-                    reserves[army][type]--; // La descontamos de la reserva real
-                }
-            };
-
-            placeTroops('rojo');
-            placeTroops('negro');
-
-            // 3. COLOCAR MONTAÑAS (Aleatorio)
-            const placeMountains = (army, minR, maxR) => {
-                let qty = reserves[army]['montana'];
-                let attempts = 0;
-                while (qty > 0 && attempts < 100) {
-                    const r = Math.floor(Math.random() * (maxR - minR + 1)) + minR;
-                    const c = Math.floor(Math.random() * 10);
-                    if (logicBoard[r][c] === null && terrain[r][c] !== 'water') {
-                        logicBoard[r][c] = { army, type: 'montana' };
-                        reserves[army]['montana']--;
-                        qty--;
-                    }
-                    attempts++;
-                }
-            };
-
-            placeMountains('rojo', 0, 4);
-            placeMountains('negro', 5, 9);
-
-            // Iniciar
+            // Iniciar la partida
             gameState = 'playing';
             turnColor = 'rojo';
 
@@ -4214,8 +4142,6 @@
             return score;
         }
 
-        // --- MOTOR DE IA: EL CEREBRO (MINIMAX) ---
-
         // Función auxiliar para aplicar un movimiento en la mente de la IA (sin gráficos)
         function applyVirtualMove(board, move) {
             // move = { from: {r,c}, to: {r,c}, piece: type }
@@ -4389,128 +4315,252 @@
             }
         }
 
-        // --- IA v3.0: EL ARQUITECTO (Despliegue Inicial Inteligente) ---
+        // =================================================================
+        //  MÓDULO DE IA UNIFICADO v6.2 (Limpio y Sin Duplicados)
+        // =================================================================
 
-        function setupAI_Smart(aiArmy) {
-            console.log(`🏗️ IA (${aiArmy}) construyendo su base...`);
+        // 1. HELPER: Validar Zona de Despliegue
+        function isInDeploymentZone(r, army) {
+            if (r < 0 || r > 9) return false;
+            // Rojo (Norte): Filas 0 a 4
+            if (army === 'rojo') return r <= 4;
+            // Negro (Sur): Filas 5 a 9
+            if (army === 'negro') return r >= 5;
+            return false;
+        }
 
-            // 1. LIMPIEZA PREVIA (Por seguridad)
-            // Borramos cualquier rastro previo de este ejército en el tablero
-            for (let r = 0; r < 10; r++) {
-                for (let c = 0; c < 10; c++) {
-                    if (logicBoard[r][c] && logicBoard[r][c].army === aiArmy) {
-                        logicBoard[r][c] = null;
+        // 2. HELPER: Validar Casilla para Montaña (Sustituye a la antigua isValidSpot)
+        function isValidMountainSpot(r, c) {
+            if (r < 0 || r > 9 || c < 0 || c > 9) return false;
+            if (logicBoard[r][c] !== null) return false; // Debe estar vacía
+            if (terrain[r][c] === 'water') return false; // No en agua
+            return true;
+        }
+
+        // 3. HELPER: Detectar montañas pegadas (Para evitar muros)
+        function hasAdjacentMountain(r, c) {
+            const deltas = [{ r: -1, c: 0 }, { r: 1, c: 0 }, { r: 0, c: -1 }, { r: 0, c: 1 }];
+            for (const d of deltas) {
+                const nr = r + d.r;
+                const nc = c + d.c;
+                if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) {
+                    const cell = logicBoard[nr][nc];
+                    if (cell && cell.type === 'montana') return true;
+                }
+            }
+            return false;
+        }
+
+        // 4. EL EXPLORADOR: Calcula destinos válidos (Soporta Niebla de Guerra)
+        function getValidMoves(type, r, c, activeArmy, blindMode = false) {
+            let moves = [];
+            const pieceArmy = activeArmy || (logicBoard[r][c] ? logicBoard[r][c].army : turnColor);
+
+            for (let tr = 0; tr < 10; tr++) {
+                for (let tc = 0; tc < 10; tc++) {
+                    if (r === tr && c === tc) continue;
+
+                    if (isValidMove(type, r, c, tr, tc)) {
+                        // Validación de Obstáculos
+                        let target = logicBoard[tr][tc];
+
+                        // En Modo Ciego (Despliegue), ignoramos enemigos para ver el terreno puro
+                        if (blindMode && target && target.army !== pieceArmy) {
+                            target = null;
+                        }
+
+                        const isMountain = target && target.type === 'montana';
+                        const isFortress = target && target.type === 'fortaleza';
+                        const isAlly = target && target.army === pieceArmy && type !== 'lanceros';
+
+                        const isWater = terrain[tr][tc] === 'water' &&
+                            type !== 'trabuquete' &&
+                            type !== 'escorpion' &&
+                            type !== 'dragon';
+
+                        if (isMountain || isFortress || isAlly || isWater) continue;
+
+                        moves.push({ r: tr, c: tc });
                     }
                 }
             }
-            // Reiniciamos reservas de la IA al máximo
-            for (const [type, data] of Object.entries(CONFIG.pieces)) {
-                reserves[aiArmy][type] = data.qty;
+            return moves;
+        }
+
+        // 5. EL ESTRATEGA: Evalúa influencia
+        function evaluatePositionInfluence(r, c, type, army) {
+            let score = 0;
+            const originalContent = logicBoard[r][c];
+            logicBoard[r][c] = { army: army, type: type };
+
+            // A. OFENSIVA (Visión ciega: potencial del terreno)
+            const moves = getValidMoves(type, r, c, army, true);
+            logicBoard[r][c] = originalContent;
+
+            moves.forEach(m => {
+                score += 10;
+                // Bonus agresivo hacia el centro
+                if (army === 'rojo' && m.r > 4) score += 5;
+                if (army === 'negro' && m.r < 5) score += 5;
+            });
+
+            // B. DEFENSIVA (Cobertura de aliados)
+            let defendingAllies = 0;
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    const ally = logicBoard[i][j];
+                    if (ally && ally.army === army) {
+                        const allyMoves = getValidMoves(ally.type, i, j, army, true);
+                        if (allyMoves.some(m => m.r === r && m.c === c)) {
+                            defendingAllies++;
+                            if (['trabuquete', 'elefante', 'escorpion'].includes(ally.type)) score += 50;
+                            else score += 20;
+                        }
+                    }
+                }
             }
+            // Los VIPs odian estar solos
+            if (defendingAllies === 0 && ['rey', 'trabuquete'].includes(type)) {
+                score -= 60;
+            }
+            return score;
+        }
 
-            // 2. DEFINIR ZONA (Asumimos que la IA juega en el SUR/NEGRO o NORTE/ROJO)
-            // Vamos a crear una lógica relativa para que funcione en ambos lados
-            // BaseRow: La fila más al fondo (0 para Rojo, 9 para Negro)
-            // ForwardDir: Hacia dónde avanza (+1 para Rojo, -1 para Negro)
+        // 6. EL ARQUITECTO: Despliegue Principal (Fortaleza Aleatoria + Tropas)
+        function setupAI_Smart(aiArmy) {
+            console.log(`🏗️ IA (${aiArmy}): Despliegue v6.2...`);
+
+            // Limpieza
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    if (logicBoard[r][c] && logicBoard[r][c].army === aiArmy) logicBoard[r][c] = null;
+                }
+            }
+            for (const [type, data] of Object.entries(CONFIG.pieces)) reserves[aiArmy][type] = data.qty;
+
             const isNorth = (aiArmy === 'rojo');
-            const baseRow = isNorth ? 1 : 8; // Dejamos una fila de margen con el borde
-            const forward = isNorth ? 1 : -1;
+            const validRows = isNorth ? [1, 2] : [7, 8];
+            const fwd = isNorth ? 1 : -1;
 
-            // --- PASO 1: LA FORTALEZA (El Corazón) ---
-            // La ponemos centrada, pero no pegada al borde para tener espacio de maniobra
-            const fortR = baseRow;
-            const fortC = 4; // Columna E (Centrada)
+            // A. FORTALEZA ALEATORIA
+            const fortR = validRows[Math.floor(Math.random() * validRows.length)];
+            const fortC = Math.floor(Math.random() * 7) + 1;
 
-            // Colocamos la Fortaleza 2x2
             logicBoard[fortR][fortC] = { army: aiArmy, type: 'fortaleza' };
             logicBoard[fortR][fortC + 1] = { army: aiArmy, type: 'fortaleza' };
-            logicBoard[fortR + forward][fortC] = { army: aiArmy, type: 'fortaleza' };
-            logicBoard[fortR + forward][fortC + 1] = { army: aiArmy, type: 'fortaleza' };
+            logicBoard[fortR + fwd][fortC] = { army: aiArmy, type: 'fortaleza' };
+            logicBoard[fortR + fwd][fortC + 1] = { army: aiArmy, type: 'fortaleza' };
 
             fortressPos[aiArmy] = { r: fortR, c: fortC };
             reserves[aiArmy]['fortaleza'] = 0;
 
-            // --- PASO 2: LAS MONTAÑAS (El Muro) ---
-            // Estrategia: "Búnker Abierto". Protegen los flancos pero dejan el centro libre para salir.
-            const mountainSpots = [
-                { r: fortR, c: fortC - 2 },           // Flanco Izquierdo lejano
-                { r: fortR, c: fortC + 3 },           // Flanco Derecho lejano
-                { r: fortR + (forward * 2), c: fortC }  // Frente (parcial) o reserva
+            // B. MONTAÑAS
+            placeAIMountains_Smart(aiArmy);
+
+            // C. TROPAS (INFLUENCIA CIEGA)
+            const deploymentOrder = [
+                'trabuquete', 'escorpion', 'dragon', 'elefante',
+                'rey', 'c_pesada', 'arqueros', 'lanceros',
+                'c_ligera', 'chusma'
             ];
 
-            // Colocamos las montañas si están libres
-            mountainSpots.forEach(spot => {
-                if (isValidSpot(spot.r, spot.c)) {
-                    logicBoard[spot.r][spot.c] = { army: aiArmy, type: 'montana' };
-                    reserves[aiArmy]['montana']--;
-                }
-            });
+            for (const type of deploymentOrder) {
+                let loopSafety = 0;
+                while (reserves[aiArmy][type] > 0 && loopSafety < 100) {
+                    loopSafety++;
+                    let candidates = [];
 
-            // --- PASO 3: EL ANILLO DE TROPAS (La Guardia Real) ---
-            // Identificamos los huecos válidos en el anillo de salida
-            let ringSpots = [];
-            const minR = Math.min(fortR - 1, fortR + 2); // Cuidado con los índices al usar min/max con forward
-            const maxR = Math.max(fortR - 1, fortR + 2);
-
-            for (let r = 0; r < 10; r++) {
-                for (let c = 0; c < 10; c++) {
-                    if (isInExitZone(r, c, fortressPos[aiArmy]) && logicBoard[r][c] === null && terrain[r][c] !== 'water') {
-                        // Priorizamos las casillas traseras (más seguras) para el Rey
-                        // Y las delanteras para los Tanques.
-                        // Asignamos una "puntuación de seguridad" simple: Cuanto más atrás, más seguro.
-                        let safetyScore = isNorth ? (10 - r) : r;
-                        ringSpots.push({ r, c, safety: safetyScore });
-                    }
-                }
-            }
-
-            // Ordenamos los huecos por seguridad (Mayor seguridad primero)
-            ringSpots.sort((a, b) => b.safety - a.safety);
-
-            // --- LISTA DE PRIORIDAD DE DESPLIEGUE ---
-            // Orden en que queremos sacar las tropas al tablero al inicio
-            const priorityQueue = [
-                'rey',        // 1. El Rey siempre al tablero (en el lugar más seguro)
-                'dragon',     // 2. Dragón (Movilidad)
-                'elefante',   // 3. Tanques
-                'c_pesada',
-                'trabuquete',
-                'arqueros',
-                'lanceros',
-                'chusma'
-            ];
-
-            // Rellenamos los huecos del anillo siguiendo la prioridad
-            for (const type of priorityQueue) {
-                while (reserves[aiArmy][type] > 0 && ringSpots.length > 0) {
-                    // Cogemos el siguiente hueco disponible
-                    // TRUCO: Para el Rey y Arqueros, cogemos del principio (seguros)
-                    // Para Melé, cogemos del final (frente de batalla)
-                    let spot;
-                    if (['rey', 'trabuquete', 'arqueros'].includes(type)) {
-                        spot = ringSpots.shift(); // El más seguro
-                    } else {
-                        spot = ringSpots.pop(); // El más expuesto (frente)
+                    for (let r = 0; r < 10; r++) {
+                        for (let c = 0; c < 10; c++) {
+                            if (isInExitZone(r, c, fortressPos[aiArmy]) && logicBoard[r][c] === null && terrain[r][c] !== 'water') {
+                                const score = evaluatePositionInfluence(r, c, type, aiArmy);
+                                candidates.push({ r, c, score });
+                            }
+                        }
                     }
 
-                    if (spot) {
-                        logicBoard[spot.r][spot.c] = { army: aiArmy, type: type };
-                        reserves[aiArmy][type]--;
-                    }
+                    if (candidates.length === 0) break;
+
+                    candidates.sort((a, b) => b.score - a.score);
+                    const topN = Math.min(candidates.length, 3);
+                    const pickIndex = Math.floor(Math.random() * topN);
+                    const bestMove = candidates[pickIndex];
+
+                    logicBoard[bestMove.r][bestMove.c] = { army: aiArmy, type: type };
+                    reserves[aiArmy][type]--;
                 }
             }
-
-            // --- FIN ---
-            console.log("🏗️ Base IA construida.");
+            console.log(`✅ IA (${aiArmy}): Listo.`);
             renderBoard();
             updateInventories();
         }
 
-        // Función auxiliar para verificar límites
-        function isValidSpot(r, c) {
-            return r >= 0 && r < 10 && c >= 0 && c < 10 && logicBoard[r][c] === null && terrain[r][c] !== 'water';
+        // 7. EL INGENIERO DE MONTAÑAS
+        function placeAIMountains_Smart(army) {
+            const fort = fortressPos[army];
+            const isNorth = (army === 'rojo');
+            const fwd = isNorth ? 1 : -1;
+            let mountainsToPlace = 3;
+            if (reserves[army]['montana'] < 3) mountainsToPlace = reserves[army]['montana'];
+
+            const isLeftFlank = (fort.c <= 3);
+            const isRightFlank = (fort.c >= 6);
+
+            let tier1 = []; let tier2 = [];
+
+            if (isLeftFlank) { tier1.push({ r: 0, c: 4 }); tier1.push({ r: fwd * 2, c: 3 }); tier2.push({ r: 1, c: 3 }); }
+            else if (isRightFlank) { tier1.push({ r: 0, c: -3 }); tier1.push({ r: fwd * 2, c: -2 }); tier2.push({ r: 1, c: -2 }); }
+            else { tier1.push({ r: fwd * 2, c: -2 }); tier1.push({ r: fwd * 2, c: 3 }); }
+
+            tier1.push({ r: fwd * 3, c: 0 }); tier1.push({ r: fwd * 3, c: 1 });
+            tier2.push({ r: 0, c: -1 }); tier2.push({ r: 0, c: 2 }); tier2.push({ r: 1, c: -1 }); tier2.push({ r: 1, c: 2 });
+            tier2.push({ r: fwd * 2, c: -1 }); tier2.push({ r: fwd * 2, c: 2 });
+
+            tier1.sort(() => Math.random() - 0.5); tier2.sort(() => Math.random() - 0.5);
+            const wishList = [...tier1, ...tier2];
+
+            for (const vec of wishList) {
+                if (mountainsToPlace === 0) break;
+                const tr = fort.r + vec.r, tc = fort.c + vec.c;
+                if (isInDeploymentZone(tr, army) && isValidMountainSpot(tr, tc) && !hasAdjacentMountain(tr, tc)) {
+                    logicBoard[tr][tc] = { army: army, type: 'montana' };
+                    reserves[army]['montana']--; mountainsToPlace--;
+                }
+            }
+            // Relleno seguridad
+            let attempts = 100;
+            while (mountainsToPlace > 0 && attempts > 0) {
+                let rr = fort.r + Math.floor(Math.random() * 9) - 4;
+                let rc = fort.c + Math.floor(Math.random() * 9) - 4;
+                if (isInDeploymentZone(rr, army) && isValidMountainSpot(rr, rc)) {
+                    logicBoard[rr][rc] = { army: army, type: 'montana' };
+                    reserves[army]['montana']--; mountainsToPlace--;
+                }
+                attempts--;
+            }
         }
 
+        // 8. DEBUG MODE (Lanzador)
+        function activateDebugMode() {
+            if (!confirm(t('debug_confirm'))) return;
+            console.log("🛠️ Debug: Iniciando Simulación...");
+            init();
+            logicBoard = Array(10).fill().map(() => Array(10).fill(null));
+            fortressPos = { rojo: null, negro: null };
+            currentThreatMap = null;
+            p1Color = 'rojo'; p2Color = 'negro';
+
+            // Despliegue independiente
+            setupAI_Smart('rojo');
+            setupAI_Smart('negro');
+
+            gameState = 'playing';
+            turnColor = 'rojo';
+            showNotification(t('debug_active'));
+            renderBoard();
+            updateInventories();
+            checkTurnStatus();
+        }
 
     </script>
 </body>

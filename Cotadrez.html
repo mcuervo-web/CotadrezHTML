@@ -535,6 +535,35 @@
         #rules-es {
             display: none;
         }
+
+        /* Estilo para el Selector de Idioma */
+        .btn-lang {
+            background-color: #2c3e50;
+            /* Fondo oscuro a juego */
+            border: 1px solid #7f8c8d;
+            color: #bdc3c7;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-right: 20px;
+            transition: all 0.3s;
+            outline: none;
+            /* Quitar borde azul al seleccionar */
+        }
+
+        .btn-lang:hover,
+        .btn-lang:focus {
+            border-color: var(--c-gold);
+            color: var(--c-gold);
+            box-shadow: 0 0 5px rgba(241, 196, 15, 0.2);
+        }
+
+        /* Opciones internas (Solo se ve al desplegar) */
+        .btn-lang option {
+            background-color: #2c3e50;
+            color: white;
+        }
     </style>
 </head>
 
@@ -580,7 +609,11 @@
             <div class="modal-header">
                 <h2 id="rules-title" style="margin:0; color: var(--c-gold);">📜 COTADREZ RULES</h2>
                 <div style="display: flex; align-items: center;">
-                    <button id="langToggleBtn" class="btn-lang" onclick="toggleLanguage()">Leer en Español</button>
+                    <select id="langSelector" class="btn-lang" onchange="changeLanguage(this.value)">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="ru">Русский</option>
+                    </select>
                     <span class="close-btn" onclick="toggleRules()">&times;</span>
                 </div>
             </div>
@@ -845,6 +878,114 @@
                         to negotiate the exchange).</li>
                 </ul>
             </div>
+
+<div id="rules-ru" class="rules-container" style="display: none;">
+                <h3>🎯 ЦЕЛЬ</h3>
+                <p>Цель проста и жестока: <strong>Захватить вражеского 👑 Короля</strong>. Вы можете сделать это через традиционный
+                    <strong>Мат</strong> на доске или осаждая его 🏰 Крепость, пока он не будет вынужден выйти и погибнуть.
+                </p>
+                <h3>0. СИСТЕМА ПОМОЩИ</h3>
+                <ol>
+                    <li>Наведите курсор на любого юнита на <strong>1 секунду</strong>, чтобы активировать Визуальную Помощь. 
+                        В строке уведомлений (под заголовком) появится ряд иконок, напоминающих, как ходить, 
+                        какие препятствия учитывать и каковы особые характеристики юнита.</li>
+                    <li>Если удерживать курсор <strong>3 секунды</strong>, активируется помощь на доске, 
+                        показывающая доступные и заблокированные клетки.</li>
+                </ol>
+
+                <h3>1. ФАЗА РАЗВЕРТЫВАНИЯ (Туман Войны)</h3>
+                <ol>
+                    <li><strong>🏰 Крепость:</strong> Вы должны 🏗️ построить её в начале: выберите свою 🚩 Территорию
+                        (Север или Юг) и свои цвета. Ни один юнит не может ⛔ пройти сквозь неё. Это
+                        единственный юнит, который можно ставить на 🌊 Воду. Если вы еще не развернули войска, 
+                        можете вернуть её в Резерв, нажав на неё. Во время игры она не двигается (➡️:⛔).</li>
+                    <li><strong>🪖 Войска (🤝 Союзники или 🧨 Враги):</strong> Перетащите юнитов из
+                        Резерва в <strong>Кольцо Выхода</strong> (12 клеток вокруг вашей 🏰 Крепости). Если хотите
+                        вернуть юнита в Резерв на этом этапе, перетащите его за пределы Кольца.</li>
+                    <li><strong>🏔️ Горы:</strong> Можно 🏗️ разместить в любом месте вашей 🚩 Территории.
+                        Только 🐉 Драконы могут летать над ними. Во время игры они не двигаются (➡️:⛔).</li>
+                    <li><strong>Конец хода:</strong> Чтобы завершить развертывание армии, нажмите на свою Крепость.
+                        Учтите, что нельзя закончить ход, пока не размещены все 🏔️ Горы и хотя бы один юнит.</li>
+                    <li><strong>К бою!:</strong> Игрок 2 развертывается "вслепую". По завершении хода Игрока 1
+                        его армия скрывается, чтобы Игрок 2 не имел преимущества.</li>
+                </ol>
+
+                <h3>2. ДВИЖЕНИЕ И БОЙ</h3>
+                <p>Ходы по очереди, рамка доски указывает цвет активной армии. За один ход можно переместиться, 
+                    выстрелить или вывести юнита из Резерва.
+                </p>
+                <p>Захваченные фигуры попадают в <strong>Темницу</strong> врага. Вы сможете спасти их позже!
+                    Осаждая вражескую 🏰 Крепость (СМ. 3. МЕХАНИКА ОСАДЫ).
+                </p>
+
+                <h4>🛡️ Базовые Юниты</h4>
+                <ul>
+                    <li><strong>👑 Король:</strong> Ходит на 1 клетку в любом направлении (⬆️:1✖️➕). Это
+                        <strong>"КЛЮЧЕВАЯ"</strong> фигура: если её захватят, игра окончена.
+                        Не может ходить на клетки под ⚠️ Угрозой или заблокированные (⛔:🤝🏰🏔️🌊⚠️).
+                    </li>
+                    <li><strong>🏚️ Чернь:</strong> Ходит на 1 клетку ортогонально (⬆️:1➕). Не ходит на заблокированные
+                        клетки (⛔:🤝🏰🏔️🌊). <strong>ЭКСТРА: "Марш-бросок (⚡:+1🏚️)":</strong> Переместите 2
+                        разных отряда черни за один ход. Вы можете отказаться от бонуса, нажав на только что перемещенного юнита.</li>
+                    <li><strong>🔱 Копейщик:</strong> Ходит на 1 клетку ортогонально (⬆️:1➕). Не ходит на заблокированные
+                        клетки (⛔:🏰🏔️🌊). <strong>ЭКСТРА: "Смена (⚡:🤝🔄)":</strong> Меняется
+                        местами с 🤝 Союзником, если ходит на занятую им клетку.</li>
+                    <li><strong>🏹 Лучник:</strong> Ходит на 1 клетку по диагонали (⬆️:1✖️). Не ходит на заблокированные
+                        клетки (⛔:🤝🏰🏔️🌊). <strong>ЭКСТРА: "Дальний выстрел (⚡:🧨+1)":</strong> Может походить на 2
+                        клетки, чтобы захватить 🧨 Врага.</li>
+                </ul>
+
+                <h4>🐎 Кавалерия и Чудовища</h4>
+                <ul>
+                    <li><strong>🐴 Легкая Кав.:</strong> Ходит буквой "Г" диагонально (⬆️:2+1✔️). <strong>НЕ</strong> может
+                        проходить сквозь заблокированные клетки (⛔:🏰🏔️🌊).
+                        <strong>ЭКСТРА: "Прыжок (⚡:👻🪖)":</strong> Перепрыгивает через 🤝 союзников и 🧨 врагов.
+                    </li>
+                    <li><strong>🛡️ Тяжелая Кав.:</strong> Ходит буквой "Г" ортогонально (⬆️:2+1L). <strong>НЕ</strong> может
+                        проходить сквозь заблокированные клетки (⛔:🧨🏰🏔️🌊).
+                        <strong>ЭКСТРА: "Прорыв (⚡:👻🤝)":</strong> Проходит сквозь 🤝 союзные войска.
+                    </li>
+                    <li><strong>🐘 Слон:</strong> Ходит ортогонально (⬆️:➕). Не проходит сквозь заблокированные
+                        клетки (⛔:🪖🏰🏔️🌊). <strong>ЭКСТРА: "Толстая шкура (⚡:🔒+🧨🧨или🐉):"</strong> Иммунитет к
+                        атакам одиночек (нужно 2+ врага или 🐉 Дракон для захвата).</li>
+                    <li><strong>🐉 Дракон:</strong> Ходит в любом направлении (⬆️:➕✖️). Не проходит сквозь заблокированные
+                        клетки (⛔:🪖🏰). <strong>ЭКСТРА: "Полет (⚡:🐘👻🏔️🌊):"</strong>
+                        Может летать над 🏔️ Горами и 🌊 Водой и захватывать 🐘 слонов без поддержки.</li>
+                </ul>
+
+                <h4>⚙️ Осадные Орудия</h4>
+                <ul>
+                    <li><strong>Осадные Орудия</strong> могут ⬆️ двигаться (на 🔲 пустую клетку: захват только
+                        стрельбой) или 🎯 стрелять, но не оба действия за один ход.</li>
+                    <li><strong>☄️ Требушет:</strong> Ходит Диагонально на 1 клетку (должна быть 🔲 пустой) (⬆️:1✖️🔲). Стреляет
+                        Ортогонально (🎯:➕).
+                        Не проходит сквозь заблокированные клетки (⛔:🏰🏔️). <strong>ЭКСТРА: "Навесная стрельба
+                            (⚡:👻🪖🌊):"</strong> Может стрелять поверх 🌊 Воды и клеток, занятых 🧨 Врагами или 🤝 Союзниками.</li>
+                    <li><strong>🦂 Скорпион:</strong> Ходит Ортогонально на 1 клетку (должна быть 🔲 пустой) (⬆️:1➕🔲). Стреляет
+                        Диагонально (🎯:✖️).
+                        Не проходит сквозь заблокированные клетки (⛔:🤝🏰🏔️). <strong>ЭКСТРА: "Шампур
+                            (⚡:👻🌊🧨🍡🧨):"</strong> Может стрелять сквозь 🌊 Воду и клетки с 🧨 Врагами, если
+                        второй 🧨 Враг находится менее чем в 2 клетках позади, а промежуточная клетка (если есть)
+                        🔲 пуста или занята 🌊 водой: в этом случае захватывает обоих (перетащите на второго врага).</li>
+                </ul>
+
+                <h3>3. МЕХАНИКА ОСАДЫ</h3>
+                <p><strong>ШАГ 1: УГРОЗА</strong><br>Разместите <strong>2+ 🤝 Союзных юнита</strong> в Кольце
+                    Выхода 🧨 Вражеской 🏰 Крепости.</p>
+                <p><strong>ШАГ 2: ЗАЩИТА</strong><br>У защитника есть <strong>1 ход</strong>, чтобы прорвать кольцо.
+                </p>
+                <p><strong>ШАГ 3: КАЗНЬ</strong><br>Если не вышло, атакующий нажимает на 🏰 Крепость, чтобы ВЫПОЛНИТЬ
+                    ОСАДУ.</p>
+                <p><strong>ШАГ 4: ПОСЛЕДСТВИЯ</strong></p>
+                <ul>
+                    <li><strong>Спасение:</strong> Атакующий освобождает 1 пленника, нажав на него во вражеской темнице.
+                        Его войска возвращаются в Резерв.</li>
+                    <li><strong>Обмен заложниками:</strong> Защитник спасает 1 юнита (если было Спасение), выводя его
+                        из Резерва в Кольцо Выхода, или <strong>ТЕРЯЕТ
+                            ВСЁ</strong> (если в Темнице не было юнитов для обмена).</li>
+                </ul>
+            </div>
+
         </div>
     </div>
 
@@ -948,7 +1089,22 @@
                 'escorpion': "🦂 SCORPION:·····⬆️:1➕🔲·····🎯:✖️·····⛔:🤝🏰🏔️·····⚡:👻🌊🧨🍡🧨",
                 'fortaleza': "🏰 FORTRESS:·····🏗️:🌊·····⬆️:⛔.",
                 'montana': "🏔️ MOUNTAIN:·····🏗️:🚩·····⬆️:⛔"
+            },
+            'ru': {
+                'rey': "👑 КОРОЛЬ:·····⬆️:1✖️➕·····⛔:🤝🏰🏔️🌊⚠️",
+                'chusma': "🏚️ ЧЕРНЬ:·····⬆️:1➕·····⛔:🤝🏰🏔️🌊·····⚡:+1🏚️",
+                'lanceros': "🔱 КОПЕЙЩИК:·····⬆️:1➕·····⛔:🏰🏔️🌊·····⚡:🤝🔄",
+                'arqueros': "🏹 ЛУЧНИК:·····⬆️:1✖️·····⛔:🤝🏰🏔️🌊·····⚡:🧨+1",
+                'c_ligera': "🐴 ЛЕГКАЯ КАВ.:·····⬆️:2+1✔️·····⛔:🏰🏔️🌊·····⚡:👻🪖",
+                'c_pesada': "🛡️ ТЯЖЕЛАЯ КАВ.:·····⬆️:2+1L·····⛔:🧨🏰🏔️🌊·····⚡:👻🤝",
+                'elefante': "🐘 СЛОН:·····⬆️:➕·····⛔:🪖🏰🏔️🌊·····⚡:🔒+🧨🧨/🐉",
+                'dragon': "🐉 ДРАКОН:·····⬆️:➕✖️·····⛔:🪖🏰·····⚡:🐘👻🏔️🌊",
+                'trabuquete': "☄️ ТРЕБУШЕТ:·····⬆️:1✖️🔲·····🎯:➕·····⛔:🏰🏔️·····⚡:👻🪖🌊",
+                'escorpion': "🦂 СКОРПИОН:·····⬆️:1➕🔲·····🎯:✖️·····⛔:🤝🏰🏔️·····⚡:👻🌊🧨🍡🧨",
+                'fortaleza': "🏰 КРЕПОСТЬ:·····🏗️:🌊·····⬆️:⛔",
+                'montana': "🏔️ ГОРА:·····🏗️:🚩·····⬆️:⛔"
             }
+
         };
 
 
@@ -1018,7 +1174,6 @@
                 "fort_retry": "↩️ Fortaleza retirada. Puedes colocarla de nuevo.",
                 "rescue_fail": "⛔ Necesitas más tropas rodeando la Fortaleza Enemiga para rescatar.",
                 "rescue_empty": "🚁 ¡RESCATE ÉPICO! La fortaleza enemiga estaba vacía.",
-                "no_exchange": "🚫 Sin intercambio: {count} unidades capturadas en la reserva.", // <--- AÑADIR
                 "siege_end": "🔄 Asedio finalizado. Tus tropas regresan a la RESERVA.",
                 "fort_empty": "📭 Fortaleza vacía. Fin del asedio.",
                 "status_win": "👑 VICTORIA DEL EJÉRCITO {army}",
@@ -1041,9 +1196,17 @@
                 "mountain_simple": "⛔ Montaña.",
                 "fortress_simple": "⛔ Fortaleza.",
                 "fortress_first_short": "⚠️ Primero la FORTALEZA.",
-                "⛔ Agua.": "⛔ Agua.",
-                "⛔ Montaña.": "⛔ Montaña.",
-                "⛔ Fortaleza.": "⛔ Fortaleza.",
+
+                // --- MENSAJES COMPUESTOS (NUEVOS) ---
+                "msg_siege_break": "🔥 Asedio roto. {count} capturados.",
+                "msg_reinforcements": "🆕 Refuerzos: {unit}",
+                "msg_return_reserve": "↩️ {unit} devuelta a la reserva.",
+                "msg_p1_control": "J1: {color} controla el {zone}.",
+                "msg_deployed": "Desplegado: {unit}",
+                "msg_p1_finish": "✅ Despliegue J1 Finalizado. Turno del JUGADOR 2 ({color}).",
+                "msg_game_start": "¡COMIENZA LA PARTIDA! Turno de {color}",
+                "msg_rescued": "🔓 {unit} rescatado. Prisionero y tropas regresan a tu RESERVA.",
+                "no_exchange": "🚫 Sin intercambio: {count} unidades capturadas en la reserva.",
 
                 // Unidades y Colores
                 "rey": "REY", "chusma": "CHUSMA", "lanceros": "LANCERO", "arqueros": "ARQUERO",
@@ -1109,7 +1272,6 @@
                 "fort_retry": "↩️ Fortress removed. You can place it again.",
                 "rescue_fail": "⛔ Need more troops surrounding Enemy Fortress.",
                 "rescue_empty": "🚁 EPIC RESCUE! The enemy fortress was empty.",
-                "no_exchange": "🚫 No exchange: {count} units captured in reserve.", // <--- AÑADIR
                 "siege_end": "🔄 Siege ended. Troops return to RESERVE.",
                 "fort_empty": "📭 Fortress empty. Siege over.",
                 "status_win": "👑 VICTORY FOR {army} ARMY",
@@ -1135,10 +1297,127 @@
                 "⛔ Montaña.": "⛔ Mountain.",
                 "⛔ Fortaleza.": "⛔ Fortress.",
 
+                // --- COMPOSITE MESSAGES (NEW) ---
+                "msg_siege_break": "🔥 Siege broken. {count} captured.",
+                "msg_reinforcements": "🆕 Reinforcements: {unit}",
+                "msg_return_reserve": "↩️ {unit} returned to reserve.",
+                "msg_p1_control": "P1: {color} controls the {zone}.",
+                "msg_deployed": "Deployed: {unit}",
+                "msg_p1_finish": "✅ P1 Deployment Finished. PLAYER 2 Turn ({color}).",
+                "msg_game_start": "GAME START! {color} Turn",
+                "msg_rescued": "🔓 {unit} rescued. Prisoner and troops return to RESERVE.",
+                "no_exchange": "🚫 No exchange: {count} units captured in reserve.",
+
                 "rey": "KING", "chusma": "RABBLE", "lanceros": "LANCER", "arqueros": "ARCHER",
                 "c_ligera": "LT. CAVALRY", "c_pesada": "HVY. CAVALRY", "elefante": "ELEPHANT",
                 "dragon": "DRAGON", "trabuquete": "TREBUCHET", "escorpion": "SCORPION",
                 "fortaleza": "FORTRESS", "montana": "MOUNTAIN"
+            },
+            ru: {
+                // Имена Армий
+                "north": "СЕВЕРНАЯ АРМИЯ",
+                "south": "ЮЖНАЯ АРМИЯ",
+                "rojo": "КРАСНЫЙ",
+                "negro": "ЧЕРНЫЙ",
+                "DE ROJO": "КРАСНОЙ АРМИИ",
+                "DE NEGRO": "ЧЕРНОЙ АРМИИ",
+
+                // Textos Generales
+                "init": "Выберите судьбу: Перетащите Крепость для начала.",
+                "turn_part": "Ход",
+                "deploy_phase": "Фаза Развертывания",
+                "dungeon_title": "ТЕМНИЦА",
+
+                // Mensajes de Juego
+                "msg_valid": "Верный ход",
+                "msg_invalid": "Неверный ход",
+                "check_label": " (ШАХ ⚠️)",
+                "err_check": " (ШАХ ⚠️)",
+
+                // Errores y Notas
+                "water": " (ВОДА 🌊)",
+                "fortress": " (КРЕПОСТЬ 🏰)",
+                "mountain": " (ГОРА 🏔️)",
+                "occupied": " (ЗАНЯТО ⛔)",
+                "limits": " (ГРАНИЦА 🚫)",
+                "siege_only": "🔒 Можно двигать только осадные войска.",
+                "deploy_fort": "🚫 Развертывание только у Крепости.",
+                "invalid_cell": "🚫 Неверная клетка.",
+                "save_king": "👑 Спасите КОРОЛЯ!",
+                "death_zone": "⛔ Смертельная зона!",
+                "only_near": "⛔ Только рядом с Крепостью.",
+                "no_water": "⛔ Не в воду.",
+                "zone_occ": "⛔ Зона занята.",
+                "illegal": "⛔ Нелегальный ход",
+                "check_alert": "⚠️ ВАМ ШАХ! Спасайте Короля.",
+                "suicide": "⛔ Нельзя: Король будет под ударом.",
+                "relay": "🔄 Смена Копейщика",
+                "ally": "⛔ Союзная клетка.",
+                "shot": "🔥 ВЫСТРЕЛ!",
+                "capture": "⚔️ ЗАХВАТ!",
+                "siege_cancel": "🏳️ Осада отменена.",
+                "first_fort": "🚫 Сначала постройте КРЕПОСТЬ",
+                "zone_forbid": "🚫 Запретная зона.",
+                "deploy_near": "🛡️ Развертывание у Крепости",
+                "no_fit": "Не помещается!",
+                "pos_invalid": "🏰 Неверная позиция",
+                "turn_j1": "⚠️ Ход ИГРОКА 1",
+                "turn_j2": "⚠️ Ход ИГРОКА 2",
+                "relocated": "Юнит перемещен",
+                "fort_set": "🏰 Крепость установлена.",
+                "elephant_fail": "🐘 НЕВОЗМОЖНО! Нужна атака 2+ юнитов.",
+                "siege_use_reserve": "⚠️ Возьмите фигуру из РЕЗЕРВА.",
+
+                // Final de Partida
+                "mountains_left": "⚠️ Разместите все ГОРЫ перед завершением.",
+                "mountains_start": "⚠️ Разместите все ГОРЫ перед началом.",
+                "fort_reset": "🏰 Сброс: Крепость убрана.",
+                "fort_soft": "↩️ Крепость убрана (Горы остались).",
+                "fort_retry": "↩️ Крепость убрана.",
+                "rescue_fail": "⛔ Нужно больше войск для спасения.",
+                "rescue_empty": "🚁 ЭПИЧНОЕ СПАСЕНИЕ! Крепость пуста.",
+                "siege_end": "🔄 Осада окончена. Войска в РЕЗЕРВ.",
+                "fort_empty": "📭 Крепость пуста. Конец осады.",
+
+                // Mensajes Compuestos (Plantillas)
+                "status_win": "👑 ПОБЕДА АРМИИ {army}",
+                "status_draw": "🏁 КОНЕЦ: НИЧЬЯ (ПАТ)",
+                "status_gameover": "🏁 КОНЕЦ: {reason}. {winner}",
+                "reason_mate": "МАТ",
+                "reason_stalemate": "ПАТ",
+                "msg_siege_break": "🔥 Осада прорвана. Захвачено: {count}.",
+                "msg_reinforcements": "🆕 Подкрепление: {unit}",
+                "msg_return_reserve": "↩️ {unit} вернулся в резерв.",
+                "msg_p1_control": "И1: {color} контролирует {zone}.",
+                "msg_deployed": "Развернут: {unit}",
+                "msg_p1_finish": "✅ И1 Готов. Ход ИГРОКА 2 ({color}).",
+                "msg_game_start": "ИГРА НАЧАЛАСЬ! Ход: {color}",
+                "msg_rescued": "🔓 {unit} спасен. Возврат в РЕЗЕРВ.",
+                "no_exchange": "🚫 Нет обмена: {count} захвачено в резерве.",
+
+                // Tooltips
+                "click_siege": "КЛИК ДЛЯ ОСАДЫ",
+                "click_pass": "Клик для ПАСА",
+                "click_rescue": "КЛИК ДЛЯ СПАСЕНИЯ",
+                "help_visualizing": "💡 Возможных ходов: {count}...",
+                "help_blocked": "🚫 {unit}: НЕТ ХОДОВ (БЛОК)",
+                "occupied_simple": "⛔ Занято",
+                "water_error": "🌊 Не в воду!",
+                "water_simple": "⛔ Вода.",
+                "mountain_simple": "⛔ Гора.",
+                "fortress_simple": "⛔ Крепость.",
+                "fortress_first_short": "⚠️ Сначала КРЕПОСТЬ.",
+                "no_fit_here": "Не влезает!",
+
+                // Debug
+                "debug_confirm": "⚠️ ВКЛЮЧИТЬ ОТЛАДКУ?\nСлучайное развертывание.",
+                "debug_active": "🛠️ РЕЖИМ ОТЛАДКИ: Готово",
+
+                // Unidades
+                "rey": "КОРОЛЬ", "chusma": "ЧЕРНЬ", "lanceros": "КОПЕЙЩИК", "arqueros": "ЛУЧНИК",
+                "c_ligera": "ЛЕГКАЯ КАВ.", "c_pesada": "ТЯЖЕЛАЯ КАВ.", "elefante": "СЛОН",
+                "dragon": "ДРАКОН", "trabuquete": "ТРЕБУШЕТ", "escorpion": "СКОРПИОН",
+                "fortaleza": "КРЕПОСТЬ", "montana": "ГОРА"
             }
         };
 
@@ -1905,10 +2184,7 @@
                         reserves[data.army][t] = 0;
                     }
                 }
-                const msg = currentLang === 'en'
-                    ? `🔥 Siege broken. ${capturedCount} captured.`
-                    : `🔥 Asedio roto. ${capturedCount} capturados.`;
-                showNotification(msg);
+                showNotification(t('msg_siege_break', { count: capturedCount }));
                 gameState = 'playing'; besiegedArmy = null; turnColor = attackerArmy;
                 renderBoard(); updateInventories(); updateDungeons(); checkTurnStatus();
                 return;
@@ -1931,13 +2207,7 @@
                         reserves[data.army][data.type]--;
                         logicBoard[r][c] = { army: data.army, type: data.type };
 
-                        // --- CAMBIO: Traducir nombre de unidad ---
-                        const unitName = t(data.type).toUpperCase();
-
-                        const msg = (currentLang === 'en')
-                            ? `🆕 Reinforcements: ${unitName}`
-                            : `🆕 Refuerzos: ${unitName}`;
-                        showNotification(msg);
+                        showNotification(t('msg_reinforcements', { unit: t(data.type).toUpperCase() }));
                     } else { return; }
                 }
 
@@ -2159,13 +2429,7 @@
                         logicBoard[data.originR][data.originC] = null;
                         reserves[data.army][data.type]++;
 
-                        // --- CAMBIO: Traducir nombre ---
-                        const unitName = t(data.type).toUpperCase();
-
-                        const msg = (currentLang === 'en')
-                            ? `↩️ ${unitName} returned to reserve.`
-                            : `↩️ ${unitName} devuelta a la reserva.`;
-                        showNotification(msg);
+                        showNotification(t('msg_return_reserve', { unit: t(data.type).toUpperCase() }));
                         renderBoard();
                         updateInventories();
                         return;
@@ -2210,25 +2474,16 @@
                     if (isFortress) {
                         fortressPos[data.army] = { r: r, c: c };
 
-                        // --- TRADUCCIÓN CORRECTA DE ZONA ---
                         if (gameState === 'deploy-p1') {
-                            const colorName = t(p1Color).toUpperCase();
-                            const zoneName = t(p1Territory).toUpperCase();
-
-                            const msg = (currentLang === 'en')
-                                ? `P1: ${colorName} controls the ${zoneName}.`
-                                : `J1: ${colorName} controla el ${zoneName}.`;
-                            showNotification(msg);
+                            showNotification(t('msg_p1_control', {
+                                color: t(p1Color).toUpperCase(),
+                                zone: t(p1Territory).toUpperCase()
+                            }));
                         } else {
                             showNotification(t('fort_set'));
                         }
                     } else {
-                        const unitName = t(data.type).toUpperCase();
-
-                        const msg = (currentLang === 'en')
-                            ? `Deployed: ${unitName}`
-                            : `Desplegado: ${unitName}`;
-                        showNotification(msg);
+                        showNotification(t('msg_deployed', { unit: t(data.type).toUpperCase() }));
                     }
                 }
             } else if (data.source === 'board') {
@@ -2353,23 +2608,7 @@
             // 3. Pasar turno
             gameState = 'deploy-p2';
 
-            // CORRECCIÓN: Traducimos color y territorio
-            const colorName = t(p2Color).toUpperCase(); // ROJO -> RED
-            const zoneName = t(p1Territory).toUpperCase(); // north -> DEL NORTE / NORTH
-
-            const msg = (currentLang === 'en')
-                ? `✅ P1 Deployment Finished. PLAYER 2 Turn (${colorName}).`
-                : `✅ Despliegue J1 Finalizado. Turno del JUGADOR 2 (${colorName}).`;
-
-            // CORRECCIÓN EXTRA: Mensaje de control de zona
-            // "J1: ROJO controla el DEL NORTE"
-            const ctrlMsg = (currentLang === 'en')
-                ? `P1: ${t(p1Color).toUpperCase()} controls the ${zoneName}.`
-                : `J1: ${t(p1Color).toUpperCase()} controla el ${zoneName}.`;
-
-            showNotification(msg);
-            // Opcional: Si quieres mostrar el mensaje de control también, puedes concatenarlo o mostrarlo antes
-            // showNotificat(ctrlMsg); 
+            showNotification(t('msg_p1_finish', { color: t(p2Color).toUpperCase() }));
 
             renderBoard();
             updateInventories();
@@ -2429,13 +2668,7 @@
 
             // 2. SEGUNDO: Notificamos SOLO si no hay una emergencia
             if (!isCheck) {
-                // --- CAMBIO: Traducir color ---
-                const colorName = t(turnColor).toUpperCase();
-
-                const msg = (currentLang === 'en')
-                    ? `GAME START! ${colorName} Turn`
-                    : `¡COMIENZA LA PARTIDA! Turno de ${colorName}`;
-                showNotification(msg);
+                showNotification(t('msg_game_start', { color: t(turnColor).toUpperCase() }));
             }
         }
 
@@ -3378,13 +3611,7 @@
             executeSiegeReturn(defenderArmy, attackerArmy);
 
             // 3. INFORMAR AL JUGADOR (Con traducción)
-            const pName = t(prisoner.type).toUpperCase();
-
-            const msg = (currentLang === 'en')
-                ? `🔓 ${pName} rescued. Prisoner and troops return to RESERVE.`
-                : `🔓 ${pName} rescatado. Prisionero y tropas regresan a tu RESERVA.`;
-
-            showNotification(msg);
+            showNotification(t('msg_rescued', { unit: t(prisoner.type).toUpperCase() }));
 
             // 4. TRANSICIÓN CON PAUSA (2 segundos para leer antes de la alarma roja)
             setTimeout(() => {
@@ -3767,6 +3994,42 @@
             updateInventories();
             checkTurnStatus();
         }
+
+        function changeLanguage(selectedLang) {
+            currentLang = selectedLang;
+
+            // 1. GESTIÓN DE LAS REGLAS (HTML ESTÁTICO)
+            // Ocultamos todos los bloques de reglas
+            document.querySelectorAll('.rules-container').forEach(el => el.style.display = 'none');
+
+            // Mostramos el bloque del idioma seleccionado
+            const ruleBlock = document.getElementById(`rules-${currentLang}`);
+            if (ruleBlock) {
+                ruleBlock.style.display = 'block';
+            } else {
+                // Fallback: Si añadiste un idioma al selector pero no escribiste sus reglas HTML,
+                // mostramos inglés por defecto para que no quede vacío.
+                document.getElementById('rules-en').style.display = 'block';
+            }
+
+            // 2. ACTUALIZAR TÍTULO DEL MODAL
+            // (Idealmente esto también debería ir al diccionario, pero por ahora lo gestionamos aquí)
+            const title = document.getElementById('rules-title');
+            if (currentLang === 'es') title.innerText = '📜 REGLAMENTO';
+            else title.innerText = '📜 COTADREZ RULES';
+
+            // 3. ACTUALIZAR ETIQUETAS DINÁMICAS
+            document.querySelectorAll('.dungeon-label').forEach(el => {
+                el.innerText = t('dungeon_title');
+            });
+
+            // 4. ACTUALIZAR INTERFAZ DE JUEGO
+            updateStatusBar();
+
+            // Limpiamos tooltips antiguos para evitar mezclas
+            if (boardHelpTimer) clearTimeout(boardHelpTimer);
+        }
+
 
     </script>
 </body>

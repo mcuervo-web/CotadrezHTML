@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cotadrez - Mecánica de Asedio</title>
+    <title>Cotadrez - Mazmorras y Montañas</title>
     <style>
         body { background-color: #1a252f; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .game-layout { display: flex; gap: 30px; align-items: flex-start; margin-top: 20px; }
@@ -19,13 +19,12 @@
         .inventory-item { width: 55px; height: 55px; background: rgba(0,0,0,0.2); border-radius: 8px; position: relative; cursor: grab; display: flex; justify-content: center; align-items: center; }
         .inventory-item img { width: 85%; height: 85%; pointer-events: none; }
         .inventory-item.locked { opacity: 0.15; filter: grayscale(1); pointer-events: none; }
-        .inventory-item.empty { display: none; }
         .badge { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 1px solid white; pointer-events: none; }
         .piece-on-board { width: 90%; height: 90%; transition: opacity 0.3s ease; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); cursor: grab; }
-        #status-msg { margin-bottom: 15px; font-size: 1.2em; color: #f1c40f; height: 30px; text-align: center; }
-        /* Estilo para piezas capturadas (Cementerio) */
-        .graveyard { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; min-height: 50px; background: rgba(0,0,0,0.3); border-radius: 5px; padding: 5px; }
-        .graveyard img { width: 25px; height: 25px; opacity: 0.6; }
+        #status-msg { margin-bottom: 15px; font-size: 1.2em; color: #f1c40f; height: 40px; text-align: center; font-weight: bold; }
+        .dungeon { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 15px; min-height: 60px; background: rgba(44, 62, 80, 0.8); border: 1px solid #7f8c8d; border-radius: 8px; padding: 5px; position: relative; }
+        .dungeon::before { content: "MAZMORRA"; position: absolute; top: -10px; left: 10px; font-size: 10px; background: #1a252f; padding: 0 5px; color: #95a5a6; }
+        .dungeon img { width: 28px; height: 28px; filter: sepia(0.5) contrast(1.2); }
     </style>
 </head>
 <body>
@@ -37,13 +36,13 @@
         <div class="inventory-panel" id="inv-rojo">
             <h3 style="color:#e74c3c; text-align:center;">ROJO</h3>
             <div id="list-rojo" class="list"></div>
-            <div class="graveyard" id="grave-rojo"></div>
+            <div class="dungeon" id="dungeon-rojo"></div>
         </div>
         <div id="board"></div>
         <div class="inventory-panel" id="inv-negro">
             <h3 style="color:#bdc3c7; text-align:center;">NEGRO</h3>
             <div id="list-negro" class="list"></div>
-            <div class="graveyard" id="grave-negro"></div>
+            <div class="dungeon" id="dungeon-negro"></div>
         </div>
     </div>
 
@@ -61,16 +60,16 @@ const CONFIG = {
         { id: "elefante", archivo: "Elefante.svg", cant: 2, size: 1 },
         { id: "escorpion", archivo: "Escorpion.svg", cant: 1, size: 1 },
         { id: "trabuquete", archivo: "Catapulta.svg", cant: 1, size: 1 },
-        { id: "dragon", archivo: "Dragon.svg", cant: 1, size: 1, ignoraAgua: true },
+        { id: "dragon", archivo: "Dragon.svg", cant: 1, size: 1, ignoraAgua: true, vuela: true },
         { id: "rey", archivo: "Rey.svg", cant: 1, size: 1 }
     ]
 };
 
 const waterCoords = ["1,3", "3,1", "1,6", "3,8", "6,1", "8,3", "6,8", "8,6"];
-let stock = { rojo: {}, negro: {} }, cementerio = { rojo: [], negro: [] };
+let stock = { rojo: {}, negro: {} }, mazmorra = { rojo: [], negro: [] };
 let fortalezaColocada = { rojo: false, negro: false }, fortressCoords = { rojo: [], negro: [] };
 let zonasDespliegue = { rojo: [], negro: [] }, mitadesAsignadas = { rojo: null, negro: null };
-let bandoQueEmpezo = null, turnoActual = null, faseJuego = "despliegue";
+let bandoQueEmpezo = null, turnoActual = null, faseJuego = "despliegue", msgAsedio = "";
 let draggingPieceId = null, draggingArmy = null, draggingOriginTile = null;
 let chusmasMovidasEsteTurno = 0, ultimaChusmaGid = null;
 
@@ -106,10 +105,9 @@ function updateInventories() {
     ['rojo', 'negro'].forEach(army => {
         const panel = document.getElementById(`inv-${army}`);
         const list = document.getElementById(`list-${army}`);
-        const grave = document.getElementById(`grave-${army}`);
+        const dung = document.getElementById(`dungeon-${army}`);
         panel.style.visibility = (turnoActual && turnoActual !== army) ? "hidden" : "visible";
         
-        // Stock / Reserva
         list.innerHTML = '';
         CONFIG.piezas.forEach(p => {
             const n = stock[army][p.id];
@@ -123,11 +121,12 @@ function updateInventories() {
             list.appendChild(item);
         });
 
-        // Cementerio
-        grave.innerHTML = '';
-        cementerio[army].forEach(pid => {
+        // La MAZMORRA muestra lo que tú has capturado del enemigo
+        dung.innerHTML = '';
+        mazmorra[army].forEach(pid => {
+            const enemigo = army === 'rojo' ? 'negro' : 'rojo';
             const pData = CONFIG.piezas.find(x => x.id === pid);
-            grave.innerHTML += `<img src="${getUrl(army, pData.archivo)}" title="${pid}">`;
+            dung.innerHTML += `<img src="${getUrl(enemigo, pData.archivo)}" title="${pid}">`;
         });
     });
 }
@@ -140,6 +139,8 @@ function handleDragOver(e) {
     
     document.querySelectorAll('.tile').forEach(t => t.classList.remove('valid-drop', 'invalid-ghost'));
     let esValido = true;
+
+    const targetImg = this.querySelector('.piece-on-board');
 
     if (faseJuego === "despliegue") {
         let minR = !bandoQueEmpezo ? (r < 5 ? 0 : 5) : (mitadesAsignadas[draggingArmy] === 'norte' ? 0 : 5);
@@ -154,17 +155,23 @@ function handleDragOver(e) {
             }
         }
     } else { 
-        if (draggingPieceId === "chusma" && draggingOriginTile) {
-            const or = parseInt(draggingOriginTile.dataset.row), oc = parseInt(draggingOriginTile.dataset.col);
-            const dist = Math.abs(r - or) + Math.abs(c - oc);
-            const targetImg = this.querySelector('.piece-on-board');
-            if (r === or && c === oc) esValido = true;
-            else if (dist === 1 && !this.classList.contains('water')) {
+        // MOVIMIENTO EN COMBATE
+        const dist = draggingOriginTile ? Math.abs(r - parseInt(draggingOriginTile.dataset.row)) + Math.abs(c - parseInt(draggingOriginTile.dataset.col)) : 0;
+        
+        // Bloqueo de Montañas
+        if (targetImg && targetImg.dataset.pieceId === 'montana' && !p.vuela) {
+            esValido = false;
+        } else if (draggingPieceId === "chusma" && draggingOriginTile) {
+            if (r === parseInt(draggingOriginTile.dataset.row) && c === parseInt(draggingOriginTile.dataset.col)) {
+                esValido = true;
+            } else if (dist === 1 && !this.classList.contains('water')) {
                 if (targetImg && targetImg.dataset.army === draggingArmy) esValido = false;
                 else if (chusmasMovidasEsteTurno === 1 && draggingOriginTile.querySelector('img').dataset.groupId === ultimaChusmaGid) esValido = false;
                 else esValido = true;
             } else esValido = false;
-        } else esValido = false;
+        } else {
+            esValido = false; 
+        }
     }
 
     if(esValido) {
@@ -202,19 +209,14 @@ function handleDrop(e) {
         stock[draggingArmy][draggingPieceId]--;
         updateInventories();
     } else {
-        // COMBATE
         const targetImg = this.querySelector('.piece-on-board');
         let huboCaptura = false;
         if (targetImg && targetImg.dataset.army !== draggingArmy) {
             huboCaptura = true;
-            const victimArmy = targetImg.dataset.army;
+            const capturador = draggingArmy;
             const victimType = targetImg.dataset.pieceId;
-            // No se capturan montañas (opcional según reglas)
-            if(victimType !== 'montana') {
-                cementerio[victimArmy].push(victimType);
-                const gidToRemove = targetImg.dataset.groupId;
-                document.querySelectorAll(`[data-group-id="${gidToRemove}"]`).forEach(el => el.remove());
-            }
+            mazmorra[capturador].push(victimType); // El capturador se lleva la pieza a su mazmorra
+            document.querySelectorAll(`[data-group-id="${targetImg.dataset.groupId}"]`).forEach(el => el.remove());
         }
 
         const img = draggingOriginTile.querySelector('.piece-on-board');
@@ -224,15 +226,15 @@ function handleDrop(e) {
         }
         this.appendChild(img);
         
-        // REGLA: Si hay captura, el turno termina siempre (incluso para Chusma)
         if (huboCaptura) {
             finalizarTurnoCombate();
         } else if (draggingPieceId === "chusma") {
             chusmasMovidasEsteTurno++; 
             ultimaChusmaGid = img.dataset.groupId;
-            const totalChusmasValidas = document.querySelectorAll(`.piece-on-board[data-army="${turnoActual}"][data-piece-id="chusma"]`).length;
-            if (chusmasMovidasEsteTurno >= 2 || totalChusmasValidas < 2) finalizarTurnoCombate();
-            else document.getElementById('status-msg').innerText = "1/2 Turno gastado. Mueve otra Chusma o pasa.";
+            // CONTEO SOLO EN EL TABLERO
+            const chusmasTablero = document.querySelectorAll(`.piece-on-board[data-army="${turnoActual}"][data-piece-id="chusma"]`).length;
+            if (chusmasMovidasEsteTurno >= 2 || chusmasTablero < 2) finalizarTurnoCombate();
+            else document.getElementById('status-msg').innerText = "1/2 Turno: Mueve otra Chusma o pasa.";
         } else {
             finalizarTurnoCombate();
         }
@@ -241,6 +243,7 @@ function handleDrop(e) {
 }
 
 function checkAsedio() {
+    msgAsedio = "";
     ['rojo', 'negro'].forEach(army => {
         const enemigo = army === 'rojo' ? 'negro' : 'rojo';
         const zonaAnillo = zonasDespliegue[army];
@@ -251,13 +254,7 @@ function checkAsedio() {
             const img = t.querySelector('.piece-on-board');
             if(img && img.dataset.army === enemigo) atacantes++;
         });
-
-        if (atacantes >= 2) {
-            // Aquí se dispararía la lógica de Intercambio de Rehenes
-            console.log(`¡FORTALEZA ${army.toUpperCase()} BAJO ASEDIO!`);
-            document.getElementById('status-msg').innerText = `¡ASEDIO! Fortaleza ${army.toUpperCase()} rodeada.`;
-            // Por ahora solo notificamos, mañana implementaremos el intercambio manual
-        }
+        if (atacantes >= 2) msgAsedio += ` ¡ASEDIO A ${army.toUpperCase()}! `;
     });
 }
 
@@ -278,7 +275,8 @@ function finalizarTurnoCombate() {
     checkAsedio();
     chusmasMovidasEsteTurno = 0; ultimaChusmaGid = null;
     turnoActual = (turnoActual === 'rojo') ? 'negro' : 'rojo';
-    document.getElementById('status-msg').innerText = `Turno del ${turnoActual.toUpperCase()}`;
+    const status = document.getElementById('status-msg');
+    status.innerText = `Turno del ${turnoActual.toUpperCase()}${msgAsedio}`;
     updateInventories();
 }
 
@@ -291,7 +289,7 @@ function handleFortressClick(e) {
         const [r, c] = coord.split(',');
         const t = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
         return t.children.length === 0 && !t.classList.contains('water');
-    })) { alert("Completa el despliegue."); return; }
+    })) { alert("Despliega todas las montañas y el anillo."); return; }
     document.querySelectorAll(`.piece-on-board[data-army="${army}"]`).forEach(i => i.style.opacity = "0");
     document.querySelectorAll('.tile').forEach(t => t.classList.remove('deploy-zone'));
     if (army === bandoQueEmpezo) { turnoActual = (army === 'rojo') ? 'negro' : 'rojo'; }
@@ -305,11 +303,7 @@ function handleRemove(e) {
     const img = e.currentTarget.querySelector('.piece-on-board');
     if (!img) return;
     const army = img.dataset.army, pid = img.dataset.pieceId, gid = img.dataset.groupId;
-    if (pid === 'fortaleza') {
-        fortalezaColocada[army] = false;
-        fortressCoords[army] = [];
-        if(army === bandoQueEmpezo) { bandoQueEmpezo = null; turnoActual = null; mitadesAsignadas = { rojo: null, negro: null }; }
-    }
+    if (pid === 'fortaleza') { fortalezaColocada[army] = false; fortressCoords[army] = []; }
     stock[army][pid]++;
     document.querySelectorAll(`[data-group-id="${gid}"]`).forEach(el => el.remove());
     updateInventories();

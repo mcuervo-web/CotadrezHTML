@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cotadrez - Mazmorras y Montañas</title>
+    <title>Cotadrez - Lanceros y Permutas</title>
     <style>
         body { background-color: #1a252f; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .game-layout { display: flex; gap: 30px; align-items: flex-start; margin-top: 20px; }
@@ -107,7 +107,6 @@ function updateInventories() {
         const list = document.getElementById(`list-${army}`);
         const dung = document.getElementById(`dungeon-${army}`);
         panel.style.visibility = (turnoActual && turnoActual !== army) ? "hidden" : "visible";
-        
         list.innerHTML = '';
         CONFIG.piezas.forEach(p => {
             const n = stock[army][p.id];
@@ -120,8 +119,6 @@ function updateInventories() {
             item.ondragstart = () => { draggingPieceId = p.id; draggingArmy = army; draggingOriginTile = null; };
             list.appendChild(item);
         });
-
-        // La MAZMORRA muestra lo que tú has capturado del enemigo
         dung.innerHTML = '';
         mazmorra[army].forEach(pid => {
             const enemigo = army === 'rojo' ? 'negro' : 'rojo';
@@ -136,15 +133,15 @@ function handleDragOver(e) {
     if (!draggingPieceId) return;
     const r = parseInt(this.dataset.row), c = parseInt(this.dataset.col);
     const p = CONFIG.piezas.find(x => x.id === draggingPieceId);
-    
     document.querySelectorAll('.tile').forEach(t => t.classList.remove('valid-drop', 'invalid-ghost'));
-    let esValido = true;
-
+    
+    let esValido = false;
     const targetImg = this.querySelector('.piece-on-board');
 
     if (faseJuego === "despliegue") {
         let minR = !bandoQueEmpezo ? (r < 5 ? 0 : 5) : (mitadesAsignadas[draggingArmy] === 'norte' ? 0 : 5);
         let maxR = !bandoQueEmpezo ? (r < 5 ? 4 : 9) : (mitadesAsignadas[draggingArmy] === 'norte' ? 4 : 9);
+        esValido = true;
         for (let i = 0; i < p.size; i++) {
             for (let j = 0; j < p.size; j++) {
                 const tr = r+i, tc = c+j, t = document.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
@@ -154,24 +151,35 @@ function handleDragOver(e) {
                 else if (p.id !== "fortaleza" && p.id !== "montana" && !zonasDespliegue[draggingArmy].includes(`${tr},${tc}`)) esValido = false;
             }
         }
-    } else { 
-        // MOVIMIENTO EN COMBATE
-        const dist = draggingOriginTile ? Math.abs(r - parseInt(draggingOriginTile.dataset.row)) + Math.abs(c - parseInt(draggingOriginTile.dataset.col)) : 0;
-        
-        // Bloqueo de Montañas
-        if (targetImg && targetImg.dataset.pieceId === 'montana' && !p.vuela) {
-            esValido = false;
-        } else if (draggingPieceId === "chusma" && draggingOriginTile) {
-            if (r === parseInt(draggingOriginTile.dataset.row) && c === parseInt(draggingOriginTile.dataset.col)) {
+    } else {
+        // COMBATE
+        const or = parseInt(draggingOriginTile.dataset.row), oc = parseInt(draggingOriginTile.dataset.col);
+        const dist = Math.abs(r - or) + Math.abs(c - oc);
+
+        // Lanceros y Chusma comparten distancia 1
+        if (dist === 1 && !this.classList.contains('water')) {
+            if (targetImg) {
+                if (targetImg.dataset.pieceId === 'montana' && !p.vuela) {
+                    esValido = false;
+                } else if (targetImg.dataset.army === draggingArmy) {
+                    // REGLA LANCERO: Permuta con aliados (excepto montaña y fortaleza)
+                    if (draggingPieceId === "lanceros" && targetImg.dataset.pieceId !== 'fortaleza' && targetImg.dataset.pieceId !== 'montana') {
+                        esValido = true;
+                    } else esValido = false;
+                } else {
+                    // Enemigo: Captura
+                    esValido = true;
+                }
+            } else {
+                // Casilla vacía
                 esValido = true;
-            } else if (dist === 1 && !this.classList.contains('water')) {
-                if (targetImg && targetImg.dataset.army === draggingArmy) esValido = false;
-                else if (chusmasMovidasEsteTurno === 1 && draggingOriginTile.querySelector('img').dataset.groupId === ultimaChusmaGid) esValido = false;
-                else esValido = true;
-            } else esValido = false;
-        } else {
-            esValido = false; 
-        }
+            }
+            
+            // Restricción Chusma (No mover la misma 2 veces)
+            if (draggingPieceId === "chusma" && chusmasMovidasEsteTurno === 1 && draggingOriginTile.querySelector('img').dataset.groupId === ultimaChusmaGid) {
+                esValido = false;
+            }
+        } else if (r === or && c === oc) esValido = true; // Soltar en el mismo sitio
     }
 
     if(esValido) {
@@ -200,8 +208,7 @@ function handleDrop(e) {
         const p = CONFIG.piezas.find(x => x.id === draggingPieceId);
         for (let i = 0; i < p.size; i++) 
             for (let j = 0; j < p.size; j++) {
-                const tr = r+i, tc = c+j;
-                const t = document.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
+                const tr = r+i, tc = c+j, t = document.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
                 t.appendChild(createPieceImg(draggingArmy, draggingPieceId, gId));
                 if(p.id === "fortaleza") fortressCoords[draggingArmy].push(`${tr},${tc}`);
             }
@@ -210,33 +217,40 @@ function handleDrop(e) {
         updateInventories();
     } else {
         const targetImg = this.querySelector('.piece-on-board');
-        let huboCaptura = false;
-        if (targetImg && targetImg.dataset.army !== draggingArmy) {
-            huboCaptura = true;
-            const capturador = draggingArmy;
-            const victimType = targetImg.dataset.pieceId;
-            mazmorra[capturador].push(victimType); // El capturador se lleva la pieza a su mazmorra
-            document.querySelectorAll(`[data-group-id="${targetImg.dataset.groupId}"]`).forEach(el => el.remove());
+        const myImg = draggingOriginTile.querySelector('.piece-on-board');
+        let huboAccionEspecial = false;
+
+        if (targetImg) {
+            if (targetImg.dataset.army !== draggingArmy) {
+                // CAPTURA
+                mazmorra[draggingArmy].push(targetImg.dataset.pieceId);
+                document.querySelectorAll(`[data-group-id="${targetImg.dataset.groupId}"]`).forEach(el => el.remove());
+                huboAccionEspecial = true;
+            } else if (draggingPieceId === "lanceros") {
+                // PERMUTA (ENROQUE)
+                draggingOriginTile.appendChild(targetImg);
+                huboAccionEspecial = true;
+            }
         }
 
-        const img = draggingOriginTile.querySelector('.piece-on-board');
         if (r === parseInt(draggingOriginTile.dataset.row) && c === parseInt(draggingOriginTile.dataset.col)) {
             if (chusmasMovidasEsteTurno > 0) finalizarTurnoCombate();
             return;
         }
-        this.appendChild(img);
+
+        this.appendChild(myImg);
         
-        if (huboCaptura) {
+        // Finalización de turno
+        if (draggingPieceId === "lanceros" || huboAccionEspecial) {
             finalizarTurnoCombate();
         } else if (draggingPieceId === "chusma") {
             chusmasMovidasEsteTurno++; 
-            ultimaChusmaGid = img.dataset.groupId;
-            // CONTEO SOLO EN EL TABLERO
+            ultimaChusmaGid = myImg.dataset.groupId;
             const chusmasTablero = document.querySelectorAll(`.piece-on-board[data-army="${turnoActual}"][data-piece-id="chusma"]`).length;
             if (chusmasMovidasEsteTurno >= 2 || chusmasTablero < 2) finalizarTurnoCombate();
             else document.getElementById('status-msg').innerText = "1/2 Turno: Mueve otra Chusma o pasa.";
         } else {
-            finalizarTurnoCombate();
+            finalizarTurnoCombate(); // Cualquier otra pieza que movamos (si las hubiera)
         }
     }
     document.querySelectorAll('.tile').forEach(t => t.classList.remove('valid-drop', 'invalid-ghost'));
@@ -275,8 +289,7 @@ function finalizarTurnoCombate() {
     checkAsedio();
     chusmasMovidasEsteTurno = 0; ultimaChusmaGid = null;
     turnoActual = (turnoActual === 'rojo') ? 'negro' : 'rojo';
-    const status = document.getElementById('status-msg');
-    status.innerText = `Turno del ${turnoActual.toUpperCase()}${msgAsedio}`;
+    document.getElementById('status-msg').innerText = `Turno del ${turnoActual.toUpperCase()}${msgAsedio}`;
     updateInventories();
 }
 

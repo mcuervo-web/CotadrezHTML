@@ -155,7 +155,9 @@
         .tile { 
             width: 60px; height: 60px; 
             display: flex; align-items: center; justify-content: center; 
-            position: relative; 
+            position: relative;
+            z-index: 1; /* <--- Nivel base de apilamiento */
+            overflow: visible; /* <--- Permite que las piezas sobresalgan sin cortarse */
         }
         .light { background-color: var(--c-board-l); }
         .dark { background-color: var(--c-board-d); }
@@ -163,7 +165,39 @@
             background-color: var(--c-water) !important; 
             box-shadow: inset 0 0 15px rgba(0,0,0,0.4); /* Agua con más profundidad */
         }
+
+/* PIEZAS CUANDO ESTÁN EN EL TABLERO */
+        .piece { 
+            width: 95%;  /* Se ajusta al 90% de los 60px de la casilla */
+            height: 95%; /* Se ajusta al 90% de los 60px de la casilla */
+            z-index: 100; /* <--- IMPORTANTE: Muy alto para estar siempre encima de las casillas */
+            position: relative; /* Necesario para que el z-index funcione bien */
+            cursor: grab; 
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.6)); /* Sombra más pronunciada para dar altura */
+            pointer-events: auto; /* Asegura que reciba los eventos del ratón */
+        }
+
+        .piece:active { cursor: grabbing; transform: scale(1.05); }
+
+// Función auxiliar para mostrar mensajes temporales
+    function showNotification(msg, isError = false) {
+        const bar = document.getElementById('status-bar');
+        bar.innerText = msg;
+        bar.style.color = isError ? '#e74c3c' : '#f1c40f'; // Rojo si es error, Dorado si es info
         
+        // Efecto visual: parpadeo rápido
+        bar.style.opacity = 0;
+        setTimeout(() => bar.style.opacity = 1, 100);
+
+        // Volver al mensaje por defecto tras 3 segundos
+        if (isError) {
+            setTimeout(() => {
+                bar.innerText = "Modo Dios: Arrastra libremente las piezas al tablero";
+                bar.style.color = '#f1c40f';
+            }, 3000);
+        }
+    }
+
     </style>
 </head>
 <body>
@@ -219,7 +253,32 @@
     };
 
     let reserves = { rojo: {}, negro: {} };
+    // Matriz para las PIEZAS (Tropas) - Nombre nuevo para evitar errores
+    let logicBoard = Array(10).fill().map(() => Array(10).fill(null)); 
+
+// Matriz para el TERRENO (Agua) - Esta ya la tenías, déjala igual
     let terrain = Array(10).fill().map(() => Array(10).fill(null));
+  
+  // Función auxiliar para mostrar mensajes temporales
+    function showNotification(msg, isError = false) {
+        const bar = document.getElementById('status-bar');
+        bar.innerText = msg;
+        bar.style.color = isError ? '#e74c3c' : '#f1c40f'; // Rojo si es error, Dorado si es info
+        
+        // Efecto visual: parpadeo rápido
+        bar.style.opacity = 0;
+        setTimeout(() => bar.style.opacity = 1, 100);
+
+        // Volver al mensaje por defecto tras 3 segundos
+        if (isError) {
+            setTimeout(() => {
+                bar.innerText = "Modo Dios: Arrastra libremente las piezas al tablero";
+                bar.style.color = '#f1c40f';
+            }, 3000);
+        }
+    }
+  
+  
     // --- 2. INICIALIZACIÓN ---
     function init() {
         console.log("Inicializando sistema...");
@@ -244,7 +303,7 @@
     }
 
     // --- 3. RENDERIZADO BÁSICO ---
-    function renderBoard() {
+function renderBoard() {
         const b = document.getElementById('board');
         b.innerHTML = ''; 
 
@@ -255,15 +314,36 @@
                 tile.dataset.r = r; 
                 tile.dataset.c = c;
 
+                // --- CAMBIO 1: La casilla escucha eventos de soltar ---
+                tile.ondragover = (e) => handleDragOver(e);
+                tile.ondrop = (e) => handleDrop(e, r, c);
+                // ----------------------------------------------------
+
                 if(terrain[r][c] === 'water') {
                     tile.classList.add('water');
                 }
+
+                // Pintar pieza si existe en la matriz lógica
+                const piece = logicBoard[r][c];
+                if (piece) {
+                    const img = document.createElement('img');
+                    img.src = getImgUrl(piece.army, piece.type);
+                    img.className = 'piece'; // Clase CSS para estilo
+                    
+                    // --- CAMBIO 2: La pieza en tablero también se mueve ---
+                    img.draggable = true;
+                    img.ondragstart = (e) => handleDragStart(e, 'board', piece.army, piece.type, r, c);
+                    // -----------------------------------------------------
+
+                    tile.appendChild(img);
+                }
+
                 b.appendChild(tile);
             }
         }
     }
 
-    // Arrancar
+// Arrancar
     init();
 
 // Construye la URL de la imagen según el bando y el tipo
@@ -274,10 +354,10 @@
     }
 
 // Dibuja las piezas en los paneles laterales
-    function updateInventories() {
+function updateInventories() {
         ['rojo', 'negro'].forEach(army => {
             const list = document.getElementById(`inv-${army}`);
-            list.innerHTML = ''; // Limpiar lista actual
+            list.innerHTML = ''; 
 
             for (const [type, data] of Object.entries(CONFIG.pieces)) {
                 const count = reserves[army][type];
@@ -286,27 +366,130 @@
                     const item = document.createElement('div');
                     item.className = 'inv-item';
                     
-                    // 1. Imagen
+                    // --- CAMBIO AQUÍ: Hacemos la imagen arrastrable ---
                     const img = document.createElement('img');
                     img.src = getImgUrl(army, type);
-                    // (El estilo ya lo controla el CSS ahora)
+                    img.draggable = true; // Permite arrastrar
+                    
+                    // Conectamos con el handler 'reserve'
+                    img.ondragstart = (e) => handleDragStart(e, 'reserve', army, type);
+                    // ------------------------------------------------
 
                     item.appendChild(img);
 
-                    // 2. Contador (Solo si hay más de 1 unidad)
                     if (count > 1) {
                         const badge = document.createElement('div');
                         badge.className = 'inv-badge';
                         badge.innerText = count;
                         item.appendChild(badge);
                     }
-
                     list.appendChild(item);
                 }
             }
         });
+    } 
+
+// --- 4. LÓGICA DE ARRASTRAR Y SOLTAR ---
+
+    // 1. Al empezar a arrastrar (desde Inventario o Tablero)
+    function handleDragStart(e, source, army, type, r = null, c = null) {
+        // Guardamos los datos de la pieza que viaja
+        const data = {
+            source: source, // 'reserve' o 'board'
+            army: army,
+            type: type,
+            originR: r,     // Solo si viene del tablero
+            originC: c      // Solo si viene del tablero
+        };
+        e.dataTransfer.setData('text/plain', JSON.stringify(data));
+        e.dataTransfer.effectAllowed = 'move';
     }
-    
+
+    // 2. Permitir soltar (El navegador bloquea por defecto, hay que prevenirlo)
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    // 3. Al soltar en una casilla
+function handleDrop(e, r, c) {
+        e.preventDefault();
+        const rawData = e.dataTransfer.getData('text/plain');
+        if (!rawData) return;
+        
+        const data = JSON.parse(rawData);
+        const isFortress = (data.type === 'fortaleza');
+
+        // --- VALIDACIONES PREVIAS ---
+
+        // 1. Definir las casillas afectadas (1 casilla normal o 4 para fortaleza)
+        let cellsToCheck = [];
+        if (isFortress) {
+            // La fortaleza ocupa (r,c), (r,c+1), (r+1,c), (r+1,c+1)
+            // Verificamos que no se salga del tablero
+            if (r + 1 > 9 || c + 1 > 9) {
+                showNotification("¡La fortaleza no cabe ahí! Se sale del mapa.", true);
+                return;
+            }
+            cellsToCheck.push({r: r, c: c});
+            cellsToCheck.push({r: r, c: c+1});
+            cellsToCheck.push({r: r+1, c: c});
+            cellsToCheck.push({r: r+1, c: c+1});
+        } else {
+            // Unidad normal: solo 1 casilla
+            cellsToCheck.push({r: r, c: c});
+        }
+
+        // 2. Comprobar Agua y Ocupación para todas las casillas afectadas
+// 2. Comprobar Agua y Ocupación para todas las casillas afectadas
+        for (let cell of cellsToCheck) {
+            
+            // CORRECCIÓN: Si hay agua Y la pieza NO es una fortaleza, prohibir.
+            // (Es decir, la fortaleza SÍ puede ponerse en agua).
+            if (terrain[cell.r][cell.c] === 'water' && !isFortress) {
+                showNotification("¡No puedes colocar unidades en el AGUA!", true);
+                return; // Cancelar todo el movimiento
+            }
+
+            // Check Ocupado
+            if (logicBoard[cell.r][cell.c] !== null) {
+                showNotification("¡Esa posición está OCUPADA!", true);
+                return;
+            }
+        }
+        // --- EJECUCIÓN DEL MOVIMIENTO ---
+
+        // A. Si viene de la RESERVA
+        if (data.source === 'reserve') {
+            if (reserves[data.army][data.type] > 0) {
+                reserves[data.army][data.type]--; // Restamos 1 unidad del inventario
+                
+                // Colocamos las piezas en el tablero
+                // Si es fortaleza, se escriben 4 "trozos" de fortaleza
+                cellsToCheck.forEach(cell => {
+                    logicBoard[cell.r][cell.c] = { army: data.army, type: data.type };
+                });
+                
+                showNotification(`Has desplegado: ${data.type.toUpperCase()}`);
+            }
+        } 
+        // B. Si viene del TABLERO (Movimiento)
+        else if (data.source === 'board') {
+            // Nota: Mover una fortaleza ya colocada es complejo (habría que borrar 4 y poner 4).
+            // Para este modo Dios, si mueves una pieza del tablero, asumimos que mueves SOLO ese trozo.
+            // Si quieres mover la fortaleza entera una vez puesta, habría que programar lógica de "grupo".
+            // Por ahora, tratamos el movimiento en tablero como 1x1.
+            
+            logicBoard[data.originR][data.originC] = null; // Borrar origen
+            logicBoard[r][c] = { army: data.army, type: data.type }; // Poner destino
+            showNotification("Pieza reubicada");
+        }
+
+        // Actualizar vista
+        renderBoard();
+        updateInventories();
+    }
+  
 </script>
 </body>
 </html>

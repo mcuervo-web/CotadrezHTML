@@ -1248,14 +1248,21 @@
 
             // --- NUEVO: VALIDACIÓN DE SEGURIDAD EN TIEMPO REAL (GHOSTING) ---
             // Si técnicamente puedes moverte ahí, comprobamos si es un suicidio.
-            // FIX: Solo simulamos si NO venimos de la reserva (source !== 'reserve')
-            // Los refuerzos no pueden causar suicidio directo al rey (salvo bugs raros), 
-            // y calcularlo con originR=null da problemas de rendimiento/errores.
+            // FIX: Solo simulamos si NO venimos de la reserva y si es válido geométricamente
             if (isValid && gameState.startsWith('playing') && draggingMeta.source === 'board') {
-                // Nota: draggingMeta.originR/C ya están disponibles
-                if (!isSimulatedMoveSafe(type, draggingMeta.originR, draggingMeta.originC, r, c, army)) {
-                    isValid = false;
-                    specialMessage = " (JAQUE ⚠️)"; // Feedback visual inmediato
+                try {
+                    // BLINDAJE: Envolvemos esto en try-catch.
+                    // Si el cálculo de Jaque falla por cualquier bug interno, 
+                    // capturamos el error para que NO congele la barra de estado ni el ghosting.
+                    // Ante la duda (error), asumimos que es seguro (isValid sigue true) para dejar jugar.
+
+                    if (!isSimulatedMoveSafe(type, draggingMeta.originR, draggingMeta.originC, r, c, army)) {
+                        isValid = false;
+                        specialMessage = " (JAQUE ⚠️)";
+                    }
+                } catch (err) {
+                    console.warn("⚠️ Salto de seguridad en DragOver:", err);
+                    // No hacemos nada: isValid se mantiene true, así que se verá VERDE.
                 }
             }
 
@@ -2734,12 +2741,11 @@
             return attackers;
         }
 
-        // Simula un movimiento para ver si deja al Rey en Jaque (Suicidio)
-        // BLINDADA con try-finally para evitar corromper el tablero
+// Simula un movimiento para ver si deja al Rey en Jaque (Suicidio)
         function isSimulatedMoveSafe(pieceType, r1, c1, r2, c2, army) {
-            // 1. Identificar dónde está el Rey (o dónde estará si es él quien se mueve)
+            // 1. Identificar dónde está el Rey
             let kingR, kingC;
-
+            
             if (pieceType === 'rey') {
                 kingR = r2; kingC = c2;
             } else {
@@ -2752,29 +2758,29 @@
                     }
                 }
             }
-
-            // Si no hay rey (capturado o error), asumimos seguro para no bloquear el juego
-            if (kingR === undefined) return true;
+            
+            // Si no hay rey, no hay jaque (seguro)
+            if (kingR === undefined) return true; 
 
             // VARIABLES PARA REVERTIR
-            const originalTarget = logicBoard[r2][c2];
+            // Usamos lógica defensiva por si r2/c2 vinieran mal
+            const originalTarget = (logicBoard[r2] && logicBoard[r2][c2]) ? logicBoard[r2][c2] : null;
             let originalSource = null;
             let sourceCleared = false;
 
             try {
                 // 2. APLICAR MOVIMIENTO SIMULADO
-                // CASO A: Movimiento de tablero
-                if (r1 !== null && c1 !== null && r1 !== undefined) { // <--- AÑADIDO undefined
+                if (r1 !== null && r1 !== undefined && c1 !== null && c1 !== undefined) {
                     originalSource = logicBoard[r1][c1];
-                    // Seguridad extra: si la casilla origen está vacía (bug raro), abortamos
-                    if (!originalSource) return true;
+                    
+                    // Si la casilla origen está vacía (bug raro), abortamos
+                    if (!originalSource) return true; 
 
                     logicBoard[r1][c1] = null;
-                    sourceCleared = true; // Marcamos que hemos borrado el origen
+                    sourceCleared = true;
                     logicBoard[r2][c2] = originalSource;
-                }
-                // CASO B: Desde Reserva
-                else {
+                } else {
+                    // Caso Reserva (aunque handleDragOver ya lo filtra, lo dejamos por robustez)
                     logicBoard[r2][c2] = { type: pieceType, army: army };
                 }
 
@@ -2783,10 +2789,10 @@
                 return (attackers.length === 0);
 
             } catch (e) {
-                console.error("Error en simulación:", e);
-                return true; // Ante error, permitimos mover para no congelar
+                console.error("Error simulación:", e);
+                return true; // Ante error, permitimos el movimiento
             } finally {
-                // 4. REVERTIR SIEMPRE (Pase lo que pase)
+                // 4. REVERTIR SIEMPRE
                 if (sourceCleared && r1 !== null && c1 !== null) {
                     logicBoard[r1][c1] = originalSource;
                 }

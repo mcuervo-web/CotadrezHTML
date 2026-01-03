@@ -552,7 +552,7 @@
                 <div class="inv-list" id="inv-rojo"></div>
             </div>
             <div class="dungeon-section">
-                <div class="dungeon-label">Mazmorra</div>
+                <div class="dungeon-label">Dungeon</div>
                 <div class="dungeon-list" id="grave-rojo"></div>
             </div>
         </div>
@@ -564,7 +564,7 @@
                 <div class="inv-list" id="inv-negro"></div>
             </div>
             <div class="dungeon-section">
-                <div class="dungeon-label">Mazmorra</div>
+                <div class="dungeon-label">Dungeon</div>
                 <div class="dungeon-list" id="grave-negro"></div>
             </div>
         </div>
@@ -917,7 +917,7 @@
 
         // --- NUEVO: INFORMACIÓN DE UNIDADES (HOVER MULTI-IDIOMA) ---
         let hoverTimer = null;
-
+        let infoDisplayTimer = null;
         let boardHelpTimer = null; // Timer para la ayuda visual en el tablero (3s)
 
         const UNIT_INFO = {
@@ -928,7 +928,7 @@
                 'arqueros': "🏹 ARQUERO:·····⬆️:1✖️·····⛔:🤝🏰🏔️🌊·····⚡:🧨+1",
                 'c_ligera': "🐴 C. LIGERA:·····⬆️:2+1✔️·····⛔:🏰🏔️🌊·····⚡:👻🪖",
                 'c_pesada': "🛡️ C. PESADA:·····⬆️:2+1L·····⛔:🧨🏰🏔️🌊·····⚡:👻🤝",
-                'elefante': "🐘 ELEFANTE:·····⬆️:➕·····⛔:🪖🏰🏔️🌊·····⚡:🔒+🧨🧨o🐉",
+                'elefante': "🐘 ELEFANTE:·····⬆️:➕·····⛔:🪖🏰🏔️🌊·····⚡:🔒+🧨🧨/🐉",
                 'dragon': "🐉 DRAGÓN:·····⬆️:➕✖️·····⛔:🪖🏰·····⚡:🐘👻🏔️🌊",
                 'trabuquete': "☄️ TRABUQUETE:·····⬆️:1✖️🔲·····🎯:➕·····⛔:🏰🏔️·····⚡:👻🪖🌊",
                 'escorpion': "🦂 ESCORPIÓN:·····⬆️:1➕🔲·····🎯:✖️·····⛔:🤝🏰🏔️·····⚡:👻🌊🧨🍡🧨",
@@ -942,7 +942,7 @@
                 'arqueros': "🏹 ARCHER:·····⬆️:1✖️·····⛔:🤝🏰🏔️🌊·····⚡:🧨+1",
                 'c_ligera': "🐴 LT. CAVALRY:·····⬆️:2+1✔️·····⛔:🏰🏔️🌊·····⚡:👻🪖",
                 'c_pesada': "🛡️ HVY. CAVALRY:·····⬆️:2+1L·····⛔:🧨🏰🏔️🌊·····⚡:👻🤝",
-                'elefante': "🐘 ELEPHANT:·····⬆️:➕·····⛔:🪖🏰🏔️🌊·····⚡:🔒+🧨🧨o🐉",
+                'elefante': "🐘 ELEPHANT:·····⬆️:➕·····⛔:🪖🏰🏔️🌊·····⚡:🔒+🧨🧨/🐉",
                 'dragon': "🐉 DRAGON:·····⬆️:➕✖️·····⛔:🪖🏰·····⚡:🐘👻🏔️🌊",
                 'trabuquete': "☄️ TREBUCHET:·····⬆️:1✖️🔲·····🎯:➕·····⛔:🏰🏔️·····⚡:👻🪖🌊",
                 'escorpion': "🦂 SCORPION:·····⬆️:1➕🔲·····🎯:✖️·····⛔:🤝🏰🏔️·····⚡:👻🌊🧨🍡🧨",
@@ -968,6 +968,7 @@
                 "init": "Elige tu destino: Arrastra una Fortaleza para empezar. Mantén el ratón sobre cualquier unidad para Ayuda Visual",
                 "turn_part": "Turno",
                 "deploy_phase": "Fase Despliegue",
+                "dungeon_title": "MAZMORRA",
 
                 // Mensajes de Juego
                 "msg_valid": "Movimiento Válido",
@@ -1009,6 +1010,7 @@
                 "elephant_fail": "🐘 ¡IMPOSIBLE! El ataque no es suficiente. Necesitas al menos 2 unidades amenazando al Elefante.",
 
                 // Final de Partida y Fases
+                "siege_use_reserve": "⚠️ Debes sacar una pieza de la RESERVA.",
                 "mountains_left": "⚠️ Debes colocar todas las MONTAÑAS en el mapa antes de terminar.",
                 "mountains_start": "⚠️ Debes colocar todas las MONTAÑAS en el mapa antes de empezar.",
                 "fort_reset": "🏰 Reinicio: Fortaleza retirada. Puedes cambiar de bando.",
@@ -1016,13 +1018,18 @@
                 "fort_retry": "↩️ Fortaleza retirada. Puedes colocarla de nuevo.",
                 "rescue_fail": "⛔ Necesitas más tropas rodeando la Fortaleza Enemiga para rescatar.",
                 "rescue_empty": "🚁 ¡RESCATE ÉPICO! La fortaleza enemiga estaba vacía.",
+                "no_exchange": "🚫 Sin intercambio: {count} unidades capturadas en la reserva.", // <--- AÑADIR
                 "siege_end": "🔄 Asedio finalizado. Tus tropas regresan a la RESERVA.",
                 "fort_empty": "📭 Fortaleza vacía. Fin del asedio.",
                 "status_win": "👑 VICTORIA DEL EJÉRCITO {army}",
                 "status_draw": "🏁 FIN DE PARTIDA: TABLAS POR REY AHOGADO",
                 "status_gameover": "🏁 FIN DE PARTIDA: {reason}. {winner}",
+                "reason_mate": "POR JAQUE MATE",
+                "reason_stalemate": "TABLAS POR REY AHOGADO", // (Aunque esta no se usa en el mensaje final de tablas, es bueno tenerla)
 
                 // Tooltips y Ayuda
+                "debug_confirm": "⚠️ ¿ACTIVAR MODO DEBUG?\nSe reiniciará la partida con despliegue aleatorio legal.",
+                "debug_active": "🛠️ MODO DEBUG: Despliegue Legal Completado",
                 "click_siege": "CLICK PARA EJECUTAR EL ASEDIO",
                 "click_pass": "Click para CEDER EL TURNO",
                 "click_rescue": "CLICK PARA RESCATAR Y EJECUTAR ASEDIO",
@@ -1034,13 +1041,9 @@
                 "mountain_simple": "⛔ Montaña.",
                 "fortress_simple": "⛔ Fortaleza.",
                 "fortress_first_short": "⚠️ Primero la FORTALEZA.",
-                "no_fit_here": "¡No cabe aquí!",
-                "⛔ Casilla ocupada": "⛔ Casilla ocupada",
-                "🌊 ¡Al agua no!": "🌊 ¡Al agua no!",
                 "⛔ Agua.": "⛔ Agua.",
                 "⛔ Montaña.": "⛔ Montaña.",
                 "⛔ Fortaleza.": "⛔ Fortaleza.",
-                "⚠️ Primero la FORTALEZA.": "⚠️ Primero la FORTALEZA.",
 
                 // Unidades y Colores
                 "rey": "REY", "chusma": "CHUSMA", "lanceros": "LANCERO", "arqueros": "ARQUERO",
@@ -1059,6 +1062,7 @@
                 "init": "Choose your destiny: Drag a Fortress to start. Hover for Visual Aid.",
                 "turn_part": "Turn",
                 "deploy_phase": "Deployment Phase",
+                "dungeon_title": "DUNGEON",
 
                 "msg_valid": "Valid Move",
                 "msg_invalid": "Invalid Move",
@@ -1097,6 +1101,7 @@
                 "fort_set": "🏰 Fortress established.",
                 "elephant_fail": "🐘 IMPOSSIBLE! Attack insufficient. Need 2+ units threatening the Elephant.",
 
+                "siege_use_reserve": "⚠️ You must take a piece from the RESERVE.",
                 "mountains_left": "⚠️ You must place all MOUNTAINS before finishing.",
                 "mountains_start": "⚠️ You must place all MOUNTAINS before starting.",
                 "fort_reset": "🏰 Reset: Fortress removed. You can switch sides.",
@@ -1104,12 +1109,17 @@
                 "fort_retry": "↩️ Fortress removed. You can place it again.",
                 "rescue_fail": "⛔ Need more troops surrounding Enemy Fortress.",
                 "rescue_empty": "🚁 EPIC RESCUE! The enemy fortress was empty.",
+                "no_exchange": "🚫 No exchange: {count} units captured in reserve.", // <--- AÑADIR
                 "siege_end": "🔄 Siege ended. Troops return to RESERVE.",
                 "fort_empty": "📭 Fortress empty. Siege over.",
                 "status_win": "👑 VICTORY FOR {army} ARMY",
                 "status_draw": "🏁 GAME OVER: DRAW (STALEMATE)",
                 "status_gameover": "🏁 GAME OVER: {reason}. {winner}",
+                "reason_mate": "BY CHECKMATE",
+                "reason_stalemate": "STALEMATE",
 
+                "debug_confirm": "⚠️ ACTIVATE DEBUG MODE?\nThe game will restart with a legal random deployment.",
+                "debug_active": "🛠️ DEBUG MODE: Legal Deployment Completed",
                 "click_siege": "CLICK TO EXECUTE SIEGE",
                 "click_pass": "CLICK TO PASS TURN",
                 "click_rescue": "CLICK TO RESCUE AND EXECUTE SIEGE",
@@ -1121,13 +1131,9 @@
                 "mountain_simple": "⛔ Mountain.",
                 "fortress_simple": "⛔ Fortress.",
                 "fortress_first_short": "⚠️ FORTRESS first.",
-                "no_fit_here": "It doesn't fit here!",
-                "⛔ Casilla ocupada": "⛔ Tile occupied",
-                "🌊 ¡Al agua no!": "🌊 Not on water!",
                 "⛔ Agua.": "⛔ Water.",
                 "⛔ Montaña.": "⛔ Mountain.",
                 "⛔ Fortaleza.": "⛔ Fortress.",
-                "⚠️ Primero la FORTALEZA.": "⚠️ FORTRESS first.",
 
                 "rey": "KING", "chusma": "RABBLE", "lanceros": "LANCER", "arqueros": "ARCHER",
                 "c_ligera": "LT. CAVALRY", "c_pesada": "HVY. CAVALRY", "elefante": "ELEPHANT",
@@ -1167,11 +1173,14 @@
         function handleUnitHover(type, army, r, c) {
             if (draggingMeta) return;
 
-            // --- PROTECCIÓN FIN DE PARTIDA ---
+            // PROTECCIÓN: Si la partida terminó, no tapamos el resultado
             if (gameState === 'game-over') return;
 
-            // 1. Timer de Texto (1 segundo)
+            // 1. Timer de Aparición (1 segundo)
             if (hoverTimer) clearTimeout(hoverTimer);
+
+            // Si ya había un timer de auto-cierre corriendo, lo limpiamos para reiniciar el ciclo
+            if (infoDisplayTimer) clearTimeout(infoDisplayTimer);
 
             hoverTimer = setTimeout(() => {
                 if (!draggingMeta) {
@@ -1180,13 +1189,21 @@
                     const dict = UNIT_INFO[lang] || UNIT_INFO['es'];
                     const info = dict[type] || type.toUpperCase();
 
+                    // Mostramos la info
                     bar.innerText = `ℹ️ ${info}`;
                     bar.style.color = '#3498db';
                     bar.classList.remove('status-critical');
+
+                    // --- NUEVO: AUTO-CIERRE DE LA AYUDA ---
+                    // Tras 4 segundos, restauramos el mensaje prioritario (Asedio/Jaque/Turno)
+                    // aunque el ratón siga encima de la unidad.
+                    infoDisplayTimer = setTimeout(() => {
+                        updateStatusBar();
+                    }, 4000);
                 }
             }, 1000);
 
-            // 2. Timer de Tablero (3 segundos)
+            // 2. Timer de Tablero (3 segundos) - Luces verdes
             const isMyPiece = (gameState === 'playing' && army === turnColor);
 
             if (boardHelpTimer) clearTimeout(boardHelpTimer);
@@ -1201,14 +1218,15 @@
         }
 
         function handleUnitLeave() {
-            // Limpiamos ambos timers y los efectos visuales
+            // Limpiamos TODOS los timers
             if (hoverTimer) clearTimeout(hoverTimer);
             if (boardHelpTimer) clearTimeout(boardHelpTimer);
+            if (infoDisplayTimer) clearTimeout(infoDisplayTimer); // <--- IMPORTANTE
 
-            clearGhosts(); // Borra las luces verdes/rojas del tablero
+            clearGhosts();
 
             if (!draggingMeta) {
-                updateStatusBar(); // Restaura el texto original
+                updateStatusBar(); // Restaura el texto original inmediatamente al salir
             }
         }
 
@@ -1309,7 +1327,13 @@
                 title.innerText = '📜 REGLAMENTO';
                 currentLang = 'es';
             }
-            // --- NUEVO: Refrescar la interfaz inmediatamente ---
+
+            // --- NUEVO: Actualizar etiquetas de Mazmorra ---
+            document.querySelectorAll('.dungeon-label').forEach(el => {
+                el.innerText = t('dungeon_title');
+            });
+            // -----------------------------------------------
+
             updateStatusBar();
             // También limpiamos cualquier tooltip que hubiera quedado
             if (boardHelpTimer) clearTimeout(boardHelpTimer);
@@ -1424,7 +1448,7 @@
                             if (gameState === 'siege-confirmation' && piece.army !== turnColor) {
                                 img.classList.add('siege-pulse');
                                 img.onclick = () => executeConfirmedSiege(turnColor, piece.army);
-                                img.title = "CLICK PARA EJECUTAR EL ASEDIO";
+                                img.title = t('click_siege');
                             }
                             // 2. Fase Normal (Turno Defensor): Si MI fortaleza está asediada, parpadea
                             // Usamos siegeStatus[piece.army] para saber si ESTA fortaleza concreta sufre asedio
@@ -1450,7 +1474,7 @@
                             if (chusmaMovedCoords && r === chusmaMovedCoords.r && c === chusmaMovedCoords.c) {
                                 canDrag = false;
                                 img.style.cursor = "pointer"; // Dedo para hacer click
-                                img.title = "Click para CEDER EL TURNO";
+                                img.title = t('click_pass');
                                 img.onclick = () => finishChusmaBonusTurn();
                                 // Efecto visual para destacar que está esperando
                                 img.style.filter = "drop-shadow(0 0 5px var(--c-gold)) brightness(1.2)";
@@ -1641,7 +1665,7 @@
                     // Solo permitimos mover si la pieza es parte del asedio (está en el anillo enemigo)
                     const enemyFort = fortressPos[(army === 'rojo') ? 'negro' : 'rojo'];
                     if (!isInExitZone(r, c, enemyFort)) {
-                        showNotification("🔒 Solo puedes mover las unidades que asedian la fortaleza.");
+                        showNotification(t('siege_only'));
                         e.preventDefault();
                         return;
                     }
@@ -1859,14 +1883,14 @@
                 // de asedio hagas return;
 
                 // --- INICIO RESUMEN BLOQUE ASEDIO (Cópialo de tu v4.6) ---
-                if (data.source !== 'reserve') { showNotification("⚠️ Debes sacar una pieza de la RESERVA.", true); return; }
+                if (data.source !== 'reserve') { showNotification(t('siege_use_reserve'), true); return; }
                 const fOrigin = fortressPos[data.army];
-                if (!isInExitZone(r, c, fOrigin)) { showNotification("🚫 Solo despliegue en Fortaleza.", true); return; }
-                if (logicBoard[r][c] !== null || terrain[r][c] === 'water') { showNotification("🚫 Casilla inválida.", true); return; }
+                if (!isInExitZone(r, c, fOrigin)) { showNotification(t('deploy_fort'), true); return; }
+                if (logicBoard[r][c] !== null || terrain[r][c] === 'water') { showNotification(t('invalid_cell'), true); return; }
 
                 const myReserve = reserves[data.army];
-                if (myReserve['rey'] > 0 && data.type !== 'rey') { showNotification("👑 ¡Salva al REY!", true); return; }
-                if (data.type === 'rey' && currentThreatMap && currentThreatMap[r][c] > 0) { showNotification("⛔ ¡Zona mortal!", true); return; }
+                if (myReserve['rey'] > 0 && data.type !== 'rey') { showNotification(t('save_king'), true); return; }
+                if (data.type === 'rey' && currentThreatMap && currentThreatMap[r][c] > 0) { showNotification(t('death_zone'), true); return; }
 
                 if (reserves[data.army][data.type] > 0) {
                     reserves[data.army][data.type]--;
@@ -1899,9 +1923,9 @@
                 // --- A. REFUERZOS (DESDE RESERVA) ---
                 if (data.source === 'reserve') {
                     const fOrigin = fortressPos[data.army];
-                    if (!isInExitZone(r, c, fOrigin)) { showNotification("⛔ Solo junto a tu Fortaleza."); return; }
-                    if (terrain[r][c] === 'water') { showNotification("⛔ No en el agua."); return; }
-                    if (logicBoard[r][c] !== null) { showNotification("⛔ Zona ocupada."); return; }
+                    if (!isInExitZone(r, c, fOrigin)) { showNotification(t('only_near')); return; }
+                    if (terrain[r][c] === 'water') { showNotification(t('no_water')); return; }
+                    if (logicBoard[r][c] !== null) { showNotification(t('zone_occ')); return; }
 
                     if (reserves[data.army][data.type] > 0) {
                         reserves[data.army][data.type]--;
@@ -1924,10 +1948,10 @@
                     const target = logicBoard[r][c];
 
                     // Validaciones básicas
-                    if (terrain[r][c] === 'water' && data.type !== 'trabuquete' && data.type !== 'escorpion') { showNotification("⛔ Agua."); return; }
-                    if (target === null && terrain[r][c] === 'water') { showNotification("⛔ Agua."); return; }
-                    if (target && target.type === 'montana') { showNotification("⛔ Montaña."); return; }
-                    if (target && target.type === 'fortaleza') { showNotification("⛔ Fortaleza."); return; }
+                    if (terrain[r][c] === 'water' && data.type !== 'trabuquete' && data.type !== 'escorpion') { showNotification(t('water_simple')); return; }
+                    if (target === null && terrain[r][c] === 'water') { showNotification(t('water_simple')); return; }
+                    if (target && target.type === 'montana') { showNotification(t('mountain_simple')); return; }
+                    if (target && target.type === 'fortaleza') { showNotification(t('fortress_simple')); return; }
 
                     // --- CORRECCIÓN ELEFANTE: LÓGICA ROBUSTA ---
                     if (target && target.type === 'elefante' && target.army !== data.army && data.type !== 'dragon') {
@@ -1935,21 +1959,20 @@
                         const totalThreats = countTotalThreats(r, c, data.army);
 
                         if (totalThreats < 2) {
-                            showNotification("🐘 ¡IMPOSIBLE! El ataque no es suficiente. Necesitas al menos 2 unidades amenazando al Elefante.", true);
+                            showNotification(t('elephant_fail'), true);
                             return;
                         }
                     }
-                    // -------------------------------------------
 
                     // Validación Geométrica
                     if (!isValidMove(data.type, data.originR, data.originC, r, c)) {
-                        showNotification("⛔ Movimiento ilegal"); return;
+                        showNotification(t('illegal')); return;
                     }
 
                     // --- NUEVO: VALIDACIÓN DE SEGURIDAD (ANTI-SUICIDIO / OBLIGACIÓN DE SALVAR REY) ---
                     // Antes de mover, simulamos si esto nos deja en Jaque.
                     if (!isSimulatedMoveSafe(data.type, data.originR, data.originC, r, c, data.army)) {
-                        const msg = isCheck ? "⚠️ ¡ESTÁS EN JAQUE! Debes salvar al Rey." : "⛔ Movimiento inválido: Dejaría al Rey expuesto.";
+                        const msg = isCheck ? t('check_alert') : t('suicide');
                         showNotification(msg, true);
                         return; // Cancelamos el movimiento
                     }
@@ -1962,8 +1985,8 @@
                             if (data.type === 'lanceros') {
                                 logicBoard[data.originR][data.originC] = target;
                                 logicBoard[r][c] = { army: data.army, type: data.type };
-                                showNotification("🔄 Relevo de Lancero");
-                            } else { showNotification("⛔ Casilla aliada."); return; }
+                                showNotification(t('relay'));
+                            } else { showNotification(t('ally')); return; }
                         } else {
                             // Enemigo (Captura/Disparo)
                             wasCapture = true;
@@ -1997,7 +2020,7 @@
                                 }
                                 dungeons[data.army].push({ type: target.type, army: target.army });
                                 logicBoard[r][c] = null;
-                                showNotification("🔥 ¡DISPARO!");
+                                showNotification(t('shot'));
                             } else {
                                 // CAPTURA CUERPO A CUERPO (Se mueven)
                                 if (target.type === 'rey') {
@@ -2009,7 +2032,7 @@
                                 dungeons[data.army].push({ type: target.type, army: target.army });
                                 logicBoard[data.originR][data.originC] = null;
                                 logicBoard[r][c] = { army: data.army, type: data.type };
-                                showNotification("⚔️ ¡CAPTURA!");
+                                showNotification(t('capture'));
                             }
                         }
                     } else {
@@ -2065,7 +2088,7 @@
                     const defender = (data.army === 'rojo') ? 'negro' : 'rojo';
                     turnColor = defender; gameState = 'playing';
                     checkTurnStatus(); renderBoard(); updateInventories(); updateDungeons();
-                    if (!siegeStatus[defender]) showNotification("🏳️ Asedio cancelado.");
+                    if (!siegeStatus[defender]) showNotification(t('siege_cancel'));
                     return;
                 }
 
@@ -2119,12 +2142,12 @@
             const hasFortress = fOrigin !== null;
 
             // Validaciones
-            if (!isFortress && !hasFortress) { showNotification("🚫 Primero debes construir la FORTALEZA", true); return; }
+            if (!isFortress && !hasFortress) { showNotification(t('first_fort'), true); return; }
 
             if (p1Territory) {
                 const currentZone = getTerritory(r);
                 const myZone = (data.army === p1Color) ? p1Territory : (p1Territory === 'north' ? 'south' : 'north');
-                if (currentZone !== myZone) { showNotification("🚫 Zona Prohibida.", true); return; }
+                if (currentZone !== myZone) { showNotification(t('zone_forbid'), true); return; }
             }
 
             // BLOQUE MODIFICADO: Retorno a reserva si sale del anillo
@@ -2148,37 +2171,37 @@
                         return;
                     }
 
-                    showNotification("🛡️ Despliega junto a la Fortaleza", true); return;
+                    showNotification(t('deploy_near'), true); return;
                 }
             }
 
             let cellsToCheck = [];
             if (isFortress) {
-                if (r + 1 > 9 || c + 1 > 9) { showNotification("¡No cabe aquí!", true); return; }
+                if (r + 1 > 9 || c + 1 > 9) { showNotification(t('no_fit'), true); return; }
                 cellsToCheck.push({ r: r, c: c }, { r: r, c: c + 1 }, { r: r + 1, c: c }, { r: r + 1, c: c + 1 });
                 const invalidRows = [0, 4, 5, 9]; const invalidCols = [0, 9];
                 if (invalidRows.includes(r) || invalidRows.includes(r + 1) || invalidCols.includes(c) || invalidCols.includes(c + 1)) {
-                    showNotification("🏰 Posición inválida", true); return;
+                    showNotification(t('pos_invalid'), true); return;
                 }
             } else {
                 cellsToCheck.push({ r: r, c: c });
             }
 
             for (let cell of cellsToCheck) {
-                if (terrain[cell.r][cell.c] === 'water' && !isFortress) { showNotification("🌊 ¡Al agua no!", true); return; }
-                if (logicBoard[cell.r][cell.c] !== null) { showNotification("⛔ Casilla ocupada", true); return; }
+                if (terrain[cell.r][cell.c] === 'water' && !isFortress) { showNotification(t('water_error'), true); return; }
+                if (logicBoard[cell.r][cell.c] !== null) { showNotification(t('occupied'), true); return; }
             }
 
             if (data.source === 'reserve') {
                 if (gameState === 'init') {
-                    if (!isFortress) { showNotification("⚠️ Primero la FORTALEZA.", true); return; }
+                    if (!isFortress) { showNotification(t('first_fort'), true); return; }
                     p1Color = data.army;
                     p2Color = (p1Color === 'rojo') ? 'negro' : 'rojo';
                     p1Territory = getTerritory(r);
                     gameState = 'deploy-p1';
                 }
-                if (gameState === 'deploy-p1' && data.army !== p1Color) { showNotification("⚠️ Turno del JUGADOR 1", true); return; }
-                if (gameState === 'deploy-p2' && data.army !== p2Color) { showNotification("⚠️ Turno del JUGADOR 2", true); return; }
+                if (gameState === 'deploy-p1' && data.army !== p1Color) { showNotification(t('turn_j1'), true); return; }
+                if (gameState === 'deploy-p2' && data.army !== p2Color) { showNotification(t('turn_j2'), true); return; }
 
                 if (reserves[data.army][data.type] > 0) {
                     reserves[data.army][data.type]--;
@@ -2197,7 +2220,7 @@
                                 : `J1: ${colorName} controla el ${zoneName}.`;
                             showNotification(msg);
                         } else {
-                            showNotification(t("fort_set"));
+                            showNotification(t('fort_set'));
                         }
                     } else {
                         const unitName = t(data.type).toUpperCase();
@@ -2212,7 +2235,7 @@
                 logicBoard[data.originR][data.originC] = null;
                 cellsToCheck.forEach(cell => logicBoard[cell.r][cell.c] = { army: data.army, type: data.type });
                 if (isFortress) fortressPos[data.army] = { r: r, c: c };
-                showNotification("Unidad reubicada");
+                showNotification(t('relocated'));
             }
 
             renderBoard();
@@ -2237,7 +2260,9 @@
 
                     const img = document.createElement('img');
                     img.src = getImgUrl(captive.army, captive.type);
-                    img.title = `Prisionero: ${captive.type.toUpperCase()}`;
+                    // Necesitamos una clave simple o construirlo
+                    const uName = t(captive.type).toUpperCase();
+                    img.title = (currentLang === 'en') ? `Prisoner: ${uName}` : `Prisionero: ${uName}`;
 
                     // LÓGICA DE RESCATE
                     // Permitimos click si estamos jugando o si estamos en la fase de selección obligatoria
@@ -2246,7 +2271,7 @@
                     if (isRescueState && captive.army === turnColor && jailerArmy !== turnColor) {
                         img.classList.add('rescue-target');
                         img.onclick = () => selectPrisonerToRescue(jailerArmy, index);
-                        img.title = "CLICK PARA RESCATAR Y EJECUTAR ASEDIO";
+                        img.title = t('click_rescue');
                     }
 
                     container.appendChild(img);
@@ -2295,7 +2320,7 @@
                     gameState = 'init';
 
                     init(); // Ahora sí, llenamos reservas y pintamos el tablero vacío
-                    showNotification("🏰 Reinicio: Fortaleza retirada. Puedes cambiar de bando.");
+                    showNotification(t('fort_reset'));
                     return;
                 }
 
@@ -2312,7 +2337,7 @@
                     fortressPos[p1Color] = null;
                     reserves[p1Color]['fortaleza'] = 1;
 
-                    showNotification("↩️ Fortaleza retirada. (Tus montañas se mantienen).");
+                    showNotification(t('fort_soft'));
                     renderBoard();
                     updateInventories();
                     return;
@@ -2321,7 +2346,7 @@
 
             // 2. Condición existente: Verificar si quedan montañas por poner
             if (reserves[p1Color]['montana'] > 0) {
-                showNotification("⚠️ Debes colocar todas las MONTAÑAS en el mapa antes de terminar.", true);
+                showNotification(t('mountains_left'), true);
                 return;
             }
 
@@ -2344,7 +2369,7 @@
 
             showNotification(msg);
             // Opcional: Si quieres mostrar el mensaje de control también, puedes concatenarlo o mostrarlo antes
-            // showNotification(ctrlMsg); 
+            // showNotificat(ctrlMsg); 
 
             renderBoard();
             updateInventories();
@@ -2379,7 +2404,7 @@
                 fortressPos[p2Color] = null;
                 reserves[p2Color]['fortaleza'] = 1;
 
-                showNotification("↩️ Fortaleza retirada. Puedes colocarla de nuevo.");
+                showNotification(t('fort_retry'));
                 renderBoard();
                 updateInventories();
                 return;
@@ -2387,7 +2412,7 @@
 
             // 2. Condición existente: Montañas
             if (reserves[p2Color]['montana'] > 0) {
-                showNotification("⚠️ Debes colocar todas las MONTAÑAS en el mapa antes de empezar.", true);
+                showNotification(t('mountains_start'), true);
                 return;
             }
 
@@ -2436,7 +2461,7 @@
 
             // 3. REGLA: ¿Hay equipo de rescate?
             if (rescueTeam.length < 2) {
-                showNotification("⛔ Necesitas más tropas rodeando la Fortaleza Enemiga para rescatar.", true);
+                showNotification(t('rescue_fail'), true);
                 return;
             }
 
@@ -2460,7 +2485,7 @@
             if (enemyReserveCount > 0) {
                 // --- CASO A: EL ENEMIGO TIENE RESERVAS (ASEDIO NORMAL) ---
                 /* const msg = `🚁 ¡RESCATE ÉPICO!`;
-                 showNotification(msg); // Mensaje corto para que no solape */
+                 showNotificat(msg); // Mensaje corto para que no solape */
 
                 gameState = 'siege-resolution';
                 besiegedArmy = jailerArmy;
@@ -2473,7 +2498,7 @@
                 // pero tampoco le "matamos" nada extra porque no tiene.
                 // Simplemente recuperas tus tropas y sigue tu turno (o pasa al siguiente).
 
-                showNotification(`🚁 ¡RESCATE ÉPICO! La fortaleza enemiga estaba vacía.`);
+                showNotification(t('rescue_empty'));
 
                 // El turno se mantiene en el atacante (o pasa al siguiente, según prefieras).
                 // Normalmente tras un asedio resuelto, le tocaría al atacante mover con sus nuevas tropas
@@ -2499,9 +2524,13 @@
                 if (!gameOverData) return "";
 
                 if (gameOverData.winner) {
+                    // 1. Definimos la variable que faltaba
+                    const armyName = t(gameOverData.winner).toUpperCase();
+
+                    // 2. Retornamos el mensaje limpio
                     return t('status_gameover', {
-                        reason: gameOverData.reason || "Checkmate",
-                        winner: t('status_win', { army: gameOverData.winner.toUpperCase() })
+                        reason: t(gameOverData.reason || "reason_mate"),
+                        winner: t('status_win', { army: armyName })
                     });
                 } else {
                     return t('status_draw');
@@ -2815,7 +2844,7 @@
             gameState = 'playing';
             chusmaMovedCoords = null;
 
-            /* showNotification(`Turno ${getArmyName(turnColor)}`); */
+            /* showNotificat(`Turno ${getArmyName(turnColor)}`); */
 
             renderBoard();
             updateInventories();
@@ -3172,9 +3201,9 @@
             // E. RESOLUCIÓN DE PARTIDA
             if (!hasMoves) {
                 if (isCheck) {
-                    finishGame(enemy, "POR JAQUE MATE");
+                    finishGame(enemy, "reason_mate");
                 } else {
-                    finishGame(null, "TABLAS POR REY AHOGADO");
+                    finishGame(null, "reason_stalemate");
                 }
             }
         }
@@ -3317,7 +3346,7 @@
             }
 
             // 2. Notificar
-            /* showNotification("⚔️ Asedio sin prisioneros: Tropas replegadas. ¡EL ENEMIGO DEBE SACRIFICAR!"); */
+            /* showNotificat("⚔️ Asedio sin prisioneros: Tropas replegadas. ¡EL ENEMIGO DEBE SACRIFICAR!"); */
 
             // 3. Activar Fase de Sacrificio (Usando tu mecánica existente en handleDrop)
             gameState = 'siege-resolution';
@@ -3348,8 +3377,14 @@
             // 2. Retirar tropas de asedio
             executeSiegeReturn(defenderArmy, attackerArmy);
 
-            // 3. INFORMAR AL JUGADOR (Restauramos notificación explicativa)
-            showNotification(`🔓 ${prisoner.type.toUpperCase()} rescatado. Prisionero y tropas regresan a tu RESERVA.`);
+            // 3. INFORMAR AL JUGADOR (Con traducción)
+            const pName = t(prisoner.type).toUpperCase();
+
+            const msg = (currentLang === 'en')
+                ? `🔓 ${pName} rescued. Prisoner and troops return to RESERVE.`
+                : `🔓 ${pName} rescatado. Prisionero y tropas regresan a tu RESERVA.`;
+
+            showNotification(msg);
 
             // 4. TRANSICIÓN CON PAUSA (2 segundos para leer antes de la alarma roja)
             setTimeout(() => {
@@ -3363,7 +3398,7 @@
             executeSiegeReturn(victim, attacker);
 
             // 2. INFORMAR
-            showNotification("🔄 Asedio finalizado. Tus tropas regresan a la RESERVA.");
+            showNotification(t('siege_end'));
 
             // 3. PAUSA DE LECTURA (2 segundos)
             setTimeout(() => {
@@ -3424,13 +3459,13 @@
                     }
                 }
 
-                showNotification(`🚫 Sin intercambio: ${capturedCount} unidades capturadas en la reserva.`);
+                // --- CORRECCIÓN AQUÍ: Usamos traducción ---
+                showNotification(t('no_exchange', { count: capturedCount }));
 
                 // Volver al juego
                 gameState = 'playing';
                 besiegedArmy = null;
-                // El turno se queda en el defensor para que mueva en el tablero (o pasa, según prefieras. 
-                // Tu lógica decía "mantiene el turno en modo normal", así que no cambiamos turnColor).
+                // El turno se queda en el defensor para que mueva en el tablero
                 checkTurnStatus();
 
                 renderBoard(); updateInventories(); updateDungeons();
@@ -3444,14 +3479,14 @@
                     ? `🚨 FORTALEZA CAÍDA: ${victimArmy.toUpperCase()}, salva una unidad.`
                     : `👑 ¡PELIGRO CRÍTICO! ${victimArmy.toUpperCase()}, DEBES SALVAR AL REY (El resto será capturado).`;
  
-                showNotification(msg); */
+                showNotificat(msg); */
 
                 gameState = 'siege-resolution';
                 besiegedArmy = victimArmy;
                 updateStatusBar();
             } else {
                 // CASO: NO TIENE RESERVAS (Ni para salvar ni para perder)
-                showNotification("📭 Fortaleza vacía. Fin del asedio.");
+                showNotification(t('fort_empty'));
                 gameState = 'playing';
                 besiegedArmy = null;
                 checkTurnStatus();
@@ -3470,7 +3505,7 @@
                 turnColor = attackerArmy;
                 gameState = 'siege-prisoner-select';
 
-                /* showNotification(`⚔️ ASEDIO ÉPICO: ${attackerArmy.toUpperCase()}, elige a quién rescatar.`); */
+                /* showNotificat(`⚔️ ASEDIO ÉPICO: ${attackerArmy.toUpperCase()}, elige a quién rescatar.`); */
 
                 renderBoard(); updateInventories(); updateDungeons();
                 updateStatusBar();
@@ -3635,7 +3670,8 @@
         //  MODO DEBUG: DESPLIEGUE ALEATORIO AUTOMÁTICO (CORREGIDO)
         // =========================================================
         function activateDebugMode() {
-            if (!confirm("⚠️ ¿ACTIVAR MODO DEBUG?\nSe reiniciará la partida con despliegue aleatorio legal.")) return;
+            // RETO SUPERADO: Traducción del Confirm
+            if (!confirm(t('debug_confirm'))) return;
 
             console.log("🛠️ Ejecutando Despliegue Aleatorio...");
 
@@ -3726,7 +3762,7 @@
             gameState = 'playing';
             turnColor = 'rojo';
 
-            showNotification("🛠️ MODO DEBUG: Despliegue Legal Completado");
+            showNotification(t('debug_active'));
             renderBoard();
             updateInventories();
             checkTurnStatus();

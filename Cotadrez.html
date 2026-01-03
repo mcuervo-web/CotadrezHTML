@@ -1638,65 +1638,66 @@
                 else return !(isBlocked(r1, c1 + sC) || isBlocked(r1, c2)) || !(isBlocked(r2, c1) || isBlocked(r2, c1 + sC));
             }
 
-            // 5. UNIDADES DE RAYCAST (Dragón, Elefante, Armas)
-            // Helper de Raycast
+// 5. UNIDADES DE RAYCAST (Dragón, Elefante, Armas)
             const checkRay = (isOrtho, isDiag, canFly, isWeapon) => {
-                if (isOrtho && (r1 !== r2 && c1 !== c2)) return false;
-                if (isDiag && (dR !== dC)) return false;
+                // 1. VALIDACIÓN GEOMÉTRICA (Corregida)
+                const validOrtho = (r1 === r2 || c1 === c2);
+                const validDiag  = (dR === dC);
 
-                const sR = Math.sign(r2 - r1), sC = Math.sign(c2 - c1);
+                if (isOrtho && isDiag) {
+                    // Caso Dragón (Reina): Vale cualquiera de los dos
+                    if (!validOrtho && !validDiag) return false;
+                } else if (isOrtho) {
+                    // Caso Elefante / Trabuquete: Solo ortogonal
+                    if (!validOrtho) return false;
+                } else if (isDiag) {
+                    // Caso Escorpión: Solo diagonal
+                    if (!validDiag) return false;
+                }
+
+                // 2. CÁLCULO DE TRAYECTORIA
+                const sR = Math.sign(r2 - r1);
+                const sC = Math.sign(c2 - c1);
                 let cR = r1 + sR, cC = c1 + sC;
-
-                // Escorpión especial: cuenta enemigos
-                let enemiesInPath = 0;
+                
+                let enemiesInPath = 0; 
                 let lastEnemyPos = null;
 
                 while (cR !== r2 || cC !== c2) {
+                    // ... (El resto del bucle while se queda IGUAL que lo tenías) ...
                     const obs = logicBoard[cR][cC];
-
-                    // -- DRAGÓN --
+                    
                     if (canFly) {
-                        // Solo para ante obstáculos que no sean montaña
-                        if (obs && obs.type !== 'montana') return false;
-                    }
-                    // -- TIERRA --
-                    else {
-                        // Agua bloquea a todos menos armas (que disparan por encima)
+                        if (obs && obs.type !== 'montana') return false; 
+                    } else {
                         if (terrain[cR][cC] === 'water' && !isWeapon) return false;
-
-                        // Obstáculos sólidos bloquean a todos
                         if (obs) {
                             if (obs.type === 'montana' || obs.type === 'fortaleza') return false;
-
-                            // Unidades en medio:
+                            
                             if (isWeapon && type === 'escorpion') {
-                                // Escorpión cuenta enemigos para perforar
-                                if (obs.army !== army) { enemiesInPath++; lastEnemyPos = { r: cR, c: cC }; }
-                                else return false; // Aliado bloquea disparo
+                                if (obs.army !== army) { enemiesInPath++; lastEnemyPos = {r:cR, c:cC}; }
+                                else return false; 
                             } else if (isWeapon && type === 'trabuquete') {
-                                // Trabuquete dispara por encima de unidades (no hace nada aquí)
+                                // Ignora unidades
                             } else {
-                                // Elefante: Se bloquea con cualquier unidad
-                                return false;
+                                return false; 
                             }
                         }
                     }
                     cR += sR; cC += sC;
                 }
-
-                // Lógica final de Escorpión
+                
+                // ... (Lógica final de Escorpión igual) ...
                 if (type === 'escorpion' && enemiesInPath > 0) {
-                    // Si hay 1 enemigo en medio, validamos distancia para el segundo (el objetivo actual)
                     if (enemiesInPath === 1) {
                         const dist = Math.abs(r2 - lastEnemyPos.r);
                         return (dist >= 1 && dist <= 3);
                     }
-                    return false; // Más de 1 en medio o cálculo fallido
+                    return false; 
                 }
-
                 return true;
             };
-
+            
             if (type === 'dragon') return checkRay(true, true, true, false); // Vuela, Ortho+Diag
             if (type === 'elefante') return checkRay(true, false, false, false); // Tierra, Ortho
 

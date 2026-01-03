@@ -1503,9 +1503,22 @@
                             }
                         }
                     }
+                    // SI LA DEFENSA FALLA (Sigue habiendo 2+ enemigos)
+                    // Esto comprueba correctamente si quedan 2, 3 o 100 enemigos.
+                    // Si eliminaste uno pero quedan 2, entrará aquí correctamente.
                     if (enemiesAtGate >= 2) {
-                        gameState = 'siege-confirmation'; turnColor = attackerArmy;
-                        renderBoard(); updateInventories(); updateDungeons(); updateStatusBar();
+                        gameState = 'siege-confirmation';
+                        turnColor = attackerArmy; // El turno vuelve al atacante
+
+                        // --- CORRECCIÓN QUIRÚRGICA: PRIORIDAD DE ALERTA ---
+                        // Si venimos de una captura, hay una notificación bloqueando la barra.
+                        // La desactivamos a la fuerza para que el aviso de ASEDIO se vea SÍ o SÍ.
+                        isNotificationActive = false;
+                        if (notificationTimer) clearTimeout(notificationTimer);
+                        // --------------------------------------------------
+
+                        renderBoard(); updateInventories(); updateDungeons();
+                        updateStatusBar(); // Ahora sí mostrará "ASEDIO LISTO" en rojo
                         return;
                     }
                 }

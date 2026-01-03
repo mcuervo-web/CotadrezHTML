@@ -551,7 +551,7 @@
     </div>
 
     <footer>
-        <button class="btn-rules" onclick="toggleRules()">📜 Reglas / Rules</button>
+        <button class="btn-rules" onclick="activateDebugMode()">🛠️ DESPLIEGUE AUTOMÁTICO</button>
     </footer>
 
     <div id="rulesModal" class="modal">
@@ -1246,6 +1246,19 @@
                 }
             }
 
+            // --- NUEVO: VALIDACIÓN DE SEGURIDAD EN TIEMPO REAL (GHOSTING) ---
+            // Si técnicamente puedes moverte ahí, comprobamos si es un suicidio.
+            // FIX: Solo simulamos si NO venimos de la reserva (source !== 'reserve')
+            // Los refuerzos no pueden causar suicidio directo al rey (salvo bugs raros), 
+            // y calcularlo con originR=null da problemas de rendimiento/errores.
+            if (isValid && gameState.startsWith('playing') && draggingMeta.source === 'board') {
+                // Nota: draggingMeta.originR/C ya están disponibles
+                if (!isSimulatedMoveSafe(type, draggingMeta.originR, draggingMeta.originC, r, c, army)) {
+                    isValid = false;
+                    specialMessage = " (JAQUE ⚠️)"; // Feedback visual inmediato
+                }
+            }
+
             // =========================================================
             // C. VISUALIZACIÓN FINAL (Común)
             // =========================================================
@@ -1917,51 +1930,54 @@
                 return true;
             }
 
-            // --- 6. CABALLERÍA LIGERA (CORREGIDO: Trayectoria 2+1 Diagonales) ---
+            // --- 6. CABALLERÍA LIGERA (Ruta Dual: 2+1 ó 1+2) ---
             if (type === 'c_ligera') {
-                // Debe ser un movimiento de L (3x1)
                 if (!((dR === 3 && dC === 1) || (dR === 1 && dC === 3))) return false;
-
-                // Calculamos el punto intermedio clave (la "rodilla" de la trayectoria)
-                // Buscamos un punto a distancia 2 (diagonal) del origen y 1 (diagonal) del destino
-                let kneeR, kneeC;
-
-                // Direcciones diagonales posibles desde origen
-                const diags = [[2, 2], [2, -2], [-2, 2], [-2, -2]];
-                let foundPath = false;
-
-                for (let [kr, kc] of diags) {
-                    const checkR = r1 + kr;
-                    const checkC = c1 + kc;
-                    // Verificamos si este punto conecta diagonalmente (dist 1) con el destino
-                    if (Math.abs(r2 - checkR) === 1 && Math.abs(c2 - checkC) === 1) {
-                        kneeR = checkR;
-                        kneeC = checkC;
-                        foundPath = true;
-                        break;
-                    }
-                }
-                if (!foundPath) return false; // No debería pasar si dR/dC son correctos
-
-                // Validamos Obstáculos en la ruta:
-                // Paso 1: Casilla intermedia de la primera diagonal (r1 -> knee)
-                const mid1R = (r1 + kneeR) / 2;
-                const mid1C = (c1 + kneeC) / 2;
-
-                // Paso 2: La casilla "rodilla" (knee)
-                // NOTA: El paso final (knee -> destino) se valida por la ocupación del destino (amigo/enemigo)
 
                 const checkBlock = (r, c) => {
                     if (r < 0 || r > 9 || c < 0 || c > 9) return true;
-                    // BLOQUEOS: Agua, Montaña, Fortaleza (Ignora unidades)
                     if (terrain[r][c] === 'water') return true;
                     const o = logicBoard[r][c];
                     return (o && (o.type === 'montana' || o.type === 'fortaleza'));
                 };
 
-                if (checkBlock(mid1R, mid1C) || checkBlock(kneeR, kneeC)) return false;
+                // RUTA A: Primero salto largo (2), luego corto (1)
+                let pathA_Valid = false;
+                const diags2 = [[2, 2], [2, -2], [-2, 2], [-2, -2]];
+                for (let [kr, kc] of diags2) {
+                    // Buscamos la "rodilla" a distancia 2 del origen que conecte con destino
+                    if (Math.abs(r2 - (r1 + kr)) === 1 && Math.abs(c2 - (c1 + kc)) === 1) {
+                        const kneeR = r1 + kr;
+                        const kneeC = c1 + kc;
+                        const midR = (r1 + kneeR) / 2;
+                        const midC = (c1 + kneeC) / 2;
 
-                return true;
+                        if (!checkBlock(midR, midC) && !checkBlock(kneeR, kneeC)) {
+                            pathA_Valid = true;
+                        }
+                        break;
+                    }
+                }
+
+                // RUTA B: Primero salto corto (1), luego largo (2)
+                let pathB_Valid = false;
+                const diags1 = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+                for (let [kr, kc] of diags1) {
+                    // Buscamos la "rodilla" a distancia 1 del origen que conecte con destino
+                    if (Math.abs(r2 - (r1 + kr)) === 2 && Math.abs(c2 - (c1 + kc)) === 2) {
+                        const kneeR = r1 + kr;
+                        const kneeC = c1 + kc;
+                        const midR = (kneeR + r2) / 2;
+                        const midC = (kneeC + c2) / 2;
+
+                        if (!checkBlock(kneeR, kneeC) && !checkBlock(midR, midC)) {
+                            pathB_Valid = true;
+                        }
+                        break;
+                    }
+                }
+
+                return (pathA_Valid || pathB_Valid);
             }
 
             // --- 7. CABALLERÍA PESADA ---
@@ -2130,34 +2146,43 @@
                 return false;
             }
 
-            // --- CABALLERÍA LIGERA (Lógica actualizada) ---
+            // --- CABALLERÍA LIGERA (Ruta Dual para Amenazas) ---
             if (type === 'c_ligera') {
                 if (!((dR === 3 && dC === 1) || (dR === 1 && dC === 3))) return false;
 
-                // Buscamos la "rodilla" (paso 2)
-                let kneeR, kneeC;
-                const diags = [[2, 2], [2, -2], [-2, 2], [-2, -2]];
-                let foundPath = false;
-                for (let [kr, kc] of diags) {
-                    if (Math.abs(r2 - (r1 + kr)) === 1 && Math.abs(c2 - (c1 + kc)) === 1) {
-                        kneeR = r1 + kr; kneeC = c1 + kc; foundPath = true; break;
-                    }
-                }
-                if (!foundPath) return false;
-
-                const mid1R = (r1 + kneeR) / 2;
-                const mid1C = (c1 + kneeC) / 2;
-
                 const checkBlock = (r, c) => {
                     if (r < 0 || r > 9 || c < 0 || c > 9) return true;
-                    if (ignorePos && r === ignorePos.r && c === ignorePos.c) return false; // Transparencia
-                    if (terrain[r][c] === 'water') return true; // Agua bloquea
+                    if (ignorePos && r === ignorePos.r && c === ignorePos.c) return false;
+                    if (terrain[r][c] === 'water') return true;
                     const o = logicBoard[r][c];
                     return (o && (o.type === 'montana' || o.type === 'fortaleza'));
                 };
 
-                if (checkBlock(mid1R, mid1C) || checkBlock(kneeR, kneeC)) return false;
-                return true;
+                // RUTA A (2+1)
+                let pathA = false;
+                const diags2 = [[2, 2], [2, -2], [-2, 2], [-2, -2]];
+                for (let [kr, kc] of diags2) {
+                    if (Math.abs(r2 - (r1 + kr)) === 1 && Math.abs(c2 - (c1 + kc)) === 1) {
+                        const kneeR = r1 + kr, kneeC = c1 + kc;
+                        const midR = (r1 + kneeR) / 2, midC = (c1 + kneeC) / 2;
+                        if (!checkBlock(midR, midC) && !checkBlock(kneeR, kneeC)) pathA = true;
+                        break;
+                    }
+                }
+
+                // RUTA B (1+2)
+                let pathB = false;
+                const diags1 = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+                for (let [kr, kc] of diags1) {
+                    if (Math.abs(r2 - (r1 + kr)) === 2 && Math.abs(c2 - (c1 + kc)) === 2) {
+                        const kneeR = r1 + kr, kneeC = c1 + kc;
+                        const midR = (kneeR + r2) / 2, midC = (kneeC + c2) / 2;
+                        if (!checkBlock(kneeR, kneeC) && !checkBlock(midR, midC)) pathB = true;
+                        break;
+                    }
+                }
+
+                return (pathA || pathB);
             }
 
             // --- CABALLERÍA PESADA ---
@@ -2710,13 +2735,14 @@
         }
 
         // Simula un movimiento para ver si deja al Rey en Jaque (Suicidio)
+        // BLINDADA con try-finally para evitar corromper el tablero
         function isSimulatedMoveSafe(pieceType, r1, c1, r2, c2, army) {
             // 1. Identificar dónde está el Rey (o dónde estará si es él quien se mueve)
             let kingR, kingC;
+
             if (pieceType === 'rey') {
                 kingR = r2; kingC = c2;
             } else {
-                // Buscamos al rey en el tablero actual
                 for (let r = 0; r < 10; r++) {
                     for (let c = 0; c < 10; c++) {
                         const p = logicBoard[r][c];
@@ -2727,26 +2753,146 @@
                 }
             }
 
-            // Si no hay rey (capturado), no hay seguridad que valga
+            // Si no hay rey (capturado o error), asumimos seguro para no bloquear el juego
             if (kingR === undefined) return true;
 
-            // 2. SIMULACIÓN TEMPORAL
-            const originalSource = logicBoard[r1][c1];
+            // VARIABLES PARA REVERTIR
             const originalTarget = logicBoard[r2][c2];
+            let originalSource = null;
+            let sourceCleared = false;
 
-            logicBoard[r1][c1] = null;
-            logicBoard[r2][c2] = originalSource;
+            try {
+                // 2. APLICAR MOVIMIENTO SIMULADO
+                // CASO A: Movimiento de tablero
+                if (r1 !== null && c1 !== null && r1 !== undefined) { // <--- AÑADIDO undefined
+                    originalSource = logicBoard[r1][c1];
+                    // Seguridad extra: si la casilla origen está vacía (bug raro), abortamos
+                    if (!originalSource) return true;
 
-            // 3. VERIFICAR AMENAZAS EN EL FUTURO
-            // Usamos getAttackers que lee el tablero modificado
-            const attackers = getAttackers(kingR, kingC, army);
-            const isSafe = (attackers.length === 0);
+                    logicBoard[r1][c1] = null;
+                    sourceCleared = true; // Marcamos que hemos borrado el origen
+                    logicBoard[r2][c2] = originalSource;
+                }
+                // CASO B: Desde Reserva
+                else {
+                    logicBoard[r2][c2] = { type: pieceType, army: army };
+                }
 
-            // 4. REVERTIR (¡Vital!)
-            logicBoard[r1][c1] = originalSource;
-            logicBoard[r2][c2] = originalTarget;
+                // 3. VERIFICAR AMENAZAS
+                const attackers = getAttackers(kingR, kingC, army);
+                return (attackers.length === 0);
 
-            return isSafe;
+            } catch (e) {
+                console.error("Error en simulación:", e);
+                return true; // Ante error, permitimos mover para no congelar
+            } finally {
+                // 4. REVERTIR SIEMPRE (Pase lo que pase)
+                if (sourceCleared && r1 !== null && c1 !== null) {
+                    logicBoard[r1][c1] = originalSource;
+                }
+                logicBoard[r2][c2] = originalTarget;
+            }
+        }
+
+        // =========================================================
+        //  MODO DEBUG: DESPLIEGUE ALEATORIO AUTOMÁTICO (CORREGIDO)
+        // =========================================================
+        function activateDebugMode() {
+            if (!confirm("⚠️ ¿ACTIVAR MODO DEBUG?\nSe reiniciará la partida con despliegue aleatorio legal.")) return;
+
+            console.log("🛠️ Ejecutando Despliegue Aleatorio...");
+
+            init();
+            logicBoard = Array(10).fill().map(() => Array(10).fill(null));
+            fortressPos = { rojo: null, negro: null };
+            dungeons = { rojo: [], negro: [] };
+            shotHighlights = [];
+
+            p1Color = 'rojo'; p1Territory = 'north';
+            p2Color = 'negro';
+
+            // 1. COLOCAR FORTALEZAS (Reglas estrictas de bordes)
+            // Norte (Rojo): Filas permitidas para la esquina superior-izq: 1 ó 2 (para no tocar 0 ni 4)
+            // Sur (Negro): Filas permitidas: 6 ó 7 (para no tocar 5 ni 9)
+            // Columnas permitidas: 1 a 7 (para no tocar 0 ni 9 con el ancho 2)
+
+            const validRowsNorth = [1, 2];
+            const validRowsSouth = [6, 7];
+
+            const placeFortress = (army, validRows) => {
+                const r = validRows[Math.floor(Math.random() * validRows.length)];
+                const c = Math.floor(Math.random() * 7) + 1; // 1 a 7
+
+                logicBoard[r][c] = { army, type: 'fortaleza' };
+                logicBoard[r][c + 1] = { army, type: 'fortaleza' };
+                logicBoard[r + 1][c] = { army, type: 'fortaleza' };
+                logicBoard[r + 1][c + 1] = { army, type: 'fortaleza' };
+                fortressPos[army] = { r, c };
+                reserves[army]['fortaleza'] = 0;
+            };
+
+            placeFortress('rojo', validRowsNorth);
+            placeFortress('negro', validRowsSouth);
+
+            // 2. COLOCAR TROPAS (Solo en Anillo de Salida)
+            const placeTroops = (army) => {
+                const fort = fortressPos[army];
+                // Identificar todas las casillas válidas del anillo
+                let validSpots = [];
+                for (let r = 0; r < 10; r++) {
+                    for (let c = 0; c < 10; c++) {
+                        if (isInExitZone(r, c, fort) && logicBoard[r][c] === null && terrain[r][c] !== 'water') {
+                            validSpots.push({ r, c });
+                        }
+                    }
+                }
+
+                // Barajar posiciones
+                validSpots.sort(() => Math.random() - 0.5);
+
+                // Colocar unidades hasta llenar huecos o vaciar reserva
+                for (const [type, count] of Object.entries(reserves[army])) {
+                    if (type === 'montana') continue; // Las montañas van aparte
+                    let qty = count;
+                    while (qty > 0 && validSpots.length > 0) {
+                        const spot = validSpots.pop();
+                        logicBoard[spot.r][spot.c] = { army, type };
+                        reserves[army][type]--;
+                        qty--;
+                    }
+                }
+            };
+
+            placeTroops('rojo');
+            placeTroops('negro');
+
+            // 3. COLOCAR MONTAÑAS (En cualquier lugar libre de su territorio)
+            const placeMountains = (army, minR, maxR) => {
+                let qty = reserves[army]['montana'];
+                let attempts = 0;
+                while (qty > 0 && attempts < 100) {
+                    const r = Math.floor(Math.random() * (maxR - minR + 1)) + minR;
+                    const c = Math.floor(Math.random() * 10);
+                    if (logicBoard[r][c] === null && terrain[r][c] !== 'water') {
+                        logicBoard[r][c] = { army, type: 'montana' };
+                        reserves[army]['montana']--;
+                        qty--;
+                    }
+                    attempts++;
+                }
+            };
+
+            placeMountains('rojo', 0, 4);
+            placeMountains('negro', 5, 9);
+
+            // Iniciar
+            gameState = 'playing';
+            turnColor = 'rojo';
+
+            showNotification("🛠️ MODO DEBUG: Despliegue Legal Completado");
+            renderBoard();
+            updateInventories();
+            checkTurnStatus();
         }
 
     </script>

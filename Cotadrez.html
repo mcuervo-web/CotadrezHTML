@@ -2,37 +2,27 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Cotadrez - Selector de Mitad</title>
+    <title>Cotadrez - Movimiento Chusma</title>
     <style>
         body { background-color: #1a252f; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         .game-layout { display: flex; gap: 30px; align-items: flex-start; margin-top: 20px; }
-        
-        /* Paneles de Inventario */
         .inventory-panel { width: 160px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 2px solid #34495e; min-height: 550px; }
         .list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        /* Tablero */
-        #board { display: grid; grid-template-columns: repeat(10, 55px); grid-template-rows: repeat(10, 55px); border: 8px solid #34495e; background: #2c3e50; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        #board { display: grid; grid-template-columns: repeat(10, 55px); grid-template-rows: repeat(10, 55px); border: 8px solid #34495e; background: #2c3e50; }
         .tile { width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; position: relative; box-sizing: border-box; }
         .light { background-color: #f0d9b5; }
         .dark { background-color: #b58863; }
         .water { background-color: #3498db !important; }
-        
-        /* Zonas de selección y feedback */
         .deploy-zone { box-shadow: inset 0 0 0 4px #f1c40f; z-index: 2; }
         .valid-drop { background-color: rgba(46, 204, 113, 0.6) !important; }
         .invalid-ghost { background-color: rgba(231, 76, 60, 0.7) !important; }
-
-        /* Piezas */
         .inventory-item { width: 55px; height: 55px; background: rgba(0,0,0,0.2); border-radius: 8px; position: relative; cursor: grab; display: flex; justify-content: center; align-items: center; }
         .inventory-item img { width: 85%; height: 85%; pointer-events: none; }
         .inventory-item.locked { opacity: 0.15; filter: grayscale(1); pointer-events: none; }
         .inventory-item.empty { display: none; }
         .badge { position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; justify-content: center; align-items: center; font-weight: bold; border: 1px solid white; }
-        
-        .piece-on-board { width: 90%; height: 90%; pointer-events: none; transition: opacity 0.3s ease; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-        
-        #status-msg { margin-bottom: 15px; font-size: 1.2em; color: #f1c40f; text-shadow: 1px 1px 2px black; height: 30px; }
+        .piece-on-board { width: 90%; height: 90%; transition: opacity 0.3s ease; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); cursor: grab; }
+        #status-msg { margin-bottom: 15px; font-size: 1.2em; color: #f1c40f; height: 30px; text-align: center; }
     </style>
 </head>
 <body>
@@ -45,9 +35,7 @@
             <h3 style="color:#e74c3c; text-align:center;">ROJO</h3>
             <div id="list-rojo" class="list"></div>
         </div>
-        
         <div id="board"></div>
-        
         <div class="inventory-panel" id="inv-negro">
             <h3 style="color:#bdc3c7; text-align:center;">NEGRO</h3>
             <div id="list-negro" class="list"></div>
@@ -55,11 +43,8 @@
     </div>
 
 <script>
-// --- CONFIGURACIÓN ---
 const CONFIG = {
-    user: "mcuervo-web",
-    repo: "Cotadrez",
-    branch: "main",
+    user: "mcuervo-web", repo: "Cotadrez", branch: "main",
     piezas: [
         { id: "fortaleza", archivo: "Castillo.svg", cant: 1, size: 2, ignoraAgua: true },
         { id: "montana", archivo: "Montana.svg", cant: 3, size: 1 },
@@ -77,28 +62,20 @@ const CONFIG = {
 };
 
 const waterCoords = ["1,3", "3,1", "1,6", "3,8", "6,1", "8,3", "6,8", "8,6"];
-let stock = { rojo: {}, negro: {} };
-let fortalezaColocada = { rojo: false, negro: false };
-let zonasDespliegue = { rojo: [], negro: [] };
-let mitadesAsignadas = { rojo: null, negro: null };
-let bandoQueEmpezo = null; 
-let turnoActual = null; 
-let faseJuego = "despliegue";
-let draggingPieceId = null;
-let draggingArmy = null;
+let stock = { rojo: {}, negro: {} }, fortalezaColocada = { rojo: false, negro: false };
+let zonasDespliegue = { rojo: [], negro: [] }, mitadesAsignadas = { rojo: null, negro: null };
+let bandoQueEmpezo = null, turnoActual = null, faseJuego = "despliegue";
+let draggingPieceId = null, draggingArmy = null, draggingOriginTile = null;
+let chusmasMovidasEsteTurno = 0, ultimaChusmaGid = null;
 
 function init() {
-    CONFIG.piezas.forEach(p => {
-        stock.rojo[p.id] = p.cant;
-        stock.negro[p.id] = p.cant;
-    });
+    CONFIG.piezas.forEach(p => { stock.rojo[p.id] = p.cant; stock.negro[p.id] = p.cant; });
     createBoard();
     updateInventories();
 }
 
 function getUrl(bando, archivo) {
-    const carpeta = bando === 'rojo' ? 'Rojo' : 'Negro';
-    return `https://cdn.jsdelivr.net/gh/${CONFIG.user}/${CONFIG.repo}@${CONFIG.branch}/${carpeta}/${archivo}`;
+    return `https://cdn.jsdelivr.net/gh/${CONFIG.user}/${CONFIG.repo}@${CONFIG.branch}/${bando==='rojo'?'Rojo':'Negro'}/${archivo}`;
 }
 
 function createBoard() {
@@ -109,8 +86,7 @@ function createBoard() {
             const t = document.createElement('div');
             t.className = `tile ${(r+c)%2===0?'light':'dark'}`;
             if(waterCoords.includes(`${r},${c}`)) t.classList.add('water');
-            t.dataset.row = r;
-            t.dataset.col = c;
+            t.dataset.row = r; t.dataset.col = c;
             t.addEventListener('dragover', handleDragOver);
             t.addEventListener('drop', handleDrop);
             t.addEventListener('contextmenu', handleRemove);
@@ -124,13 +100,7 @@ function updateInventories() {
     ['rojo', 'negro'].forEach(army => {
         const panel = document.getElementById(`inv-${army}`);
         const list = document.getElementById(`list-${army}`);
-        
-        if (turnoActual && turnoActual !== army) { 
-            panel.style.visibility = "hidden"; 
-        } else {
-            panel.style.visibility = "visible";
-        }
-        
+        panel.style.visibility = (turnoActual && turnoActual !== army) ? "hidden" : "visible";
         list.innerHTML = '';
         CONFIG.piezas.forEach(p => {
             const n = stock[army][p.id];
@@ -138,16 +108,8 @@ function updateInventories() {
             const item = document.createElement('div');
             item.className = `inventory-item ${n<=0?'empty':''} ${locked?'locked':''}`;
             item.draggable = n > 0 && !locked;
-            
-            item.innerHTML = `
-                <img src="${getUrl(army, p.archivo)}">
-                ${n > 1 ? `<span class="badge">${n}</span>` : ''}
-            `;
-            
-            item.ondragstart = () => { 
-                draggingPieceId = p.id; 
-                draggingArmy = army; 
-            };
+            item.innerHTML = `<img src="${getUrl(army, p.archivo)}">${n>1?`<span class="badge">${n}</span>`:''}`;
+            item.ondragstart = () => { draggingPieceId = p.id; draggingArmy = army; draggingOriginTile = null; };
             list.appendChild(item);
         });
     });
@@ -155,92 +117,107 @@ function updateInventories() {
 
 function handleDragOver(e) {
     e.preventDefault();
-    if (faseJuego !== "despliegue") return;
-    const p = CONFIG.piezas.find(x => x.id === draggingPieceId);
-    if (!p) return;
-    
-    const r = parseInt(this.dataset.row);
-    const c = parseInt(this.dataset.col);
-    const army = draggingArmy;
-    
+    const r = parseInt(this.dataset.row), c = parseInt(this.dataset.col);
     document.querySelectorAll('.tile').forEach(t => t.classList.remove('valid-drop', 'invalid-ghost'));
+    
+    let esValido = false;
+    const p = CONFIG.piezas.find(x => x.id === draggingPieceId);
+    if(!p) return;
 
-    let esValido = true;
-    let minR, maxR;
-
-    if (!bandoQueEmpezo) {
-        minR = (r < 5) ? 0 : 5;
-        maxR = (r < 5) ? 4 : 9;
-    } else {
-        const mitad = mitadesAsignadas[army];
-        minR = (mitad === 'norte') ? 0 : 5;
-        maxR = (mitad === 'norte') ? 4 : 9;
-    }
-
-    for (let i = 0; i < p.size; i++) {
-        for (let j = 0; j < p.size; j++) {
-            const tr = r + i, tc = c + j;
-            const t = document.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
-            if (!t || t.children.length > 0) esValido = false;
-            if (!p.ignoraAgua && waterCoords.includes(`${tr},${tc}`)) esValido = false;
-            
-            if (p.id === "fortaleza") {
-                if (tr <= minR || tr >= maxR || tc <= 0 || tc >= 9) esValido = false;
-            } else if (p.id === "montana") {
-                if (tr < minR || tr > maxR) esValido = false;
-            } else {
-                if (!zonasDespliegue[army].includes(`${tr},${tc}`)) esValido = false;
+    if (faseJuego === "despliegue") {
+        let minR = !bandoQueEmpezo ? (r < 5 ? 0 : 5) : (mitadesAsignadas[draggingArmy] === 'norte' ? 0 : 5);
+        let maxR = !bandoQueEmpezo ? (r < 5 ? 4 : 9) : (mitadesAsignadas[draggingArmy] === 'norte' ? 4 : 9);
+        
+        esValido = true;
+        for (let i = 0; i < p.size; i++) {
+            for (let j = 0; j < p.size; j++) {
+                const tr = r+i, tc = c+j, t = document.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
+                if (!t || t.children.length > 0 || (!p.ignoraAgua && waterCoords.includes(`${tr},${tc}`))) esValido = false;
+                if (p.id === "fortaleza" && (tr <= minR || tr >= maxR || tc <= 0 || tc >= 9)) esValido = false;
+                else if (p.id === "montana" && (tr < minR || tr > maxR)) esValido = false;
+                else if (p.id !== "fortaleza" && p.id !== "montana" && !zonasDespliegue[draggingArmy].includes(`${tr},${tc}`)) esValido = false;
             }
         }
-    }
-
-    for (let i = 0; i < p.size; i++) {
-        for (let j = 0; j < p.size; j++) {
-            const t = document.querySelector(`[data-row="${r+i}"][data-col="${c+j}"]`);
-            if (t) t.classList.add(esValido ? 'valid-drop' : 'invalid-ghost');
+    } else { 
+        // LÓGICA DE MOVIMIENTO CHUSMA EN COMBATE
+        if (draggingPieceId === "chusma" && draggingOriginTile) {
+            const or = parseInt(draggingOriginTile.dataset.row), oc = parseInt(draggingOriginTile.dataset.col);
+            const dist = Math.abs(r - or) + Math.abs(c - oc);
+            if (dist === 1 && !this.classList.contains('water') && this.children.length === 0) esValido = true;
+            if (r === or && c === oc) esValido = true; // Permitir soltar en el mismo sitio para finalizar
         }
     }
+    this.classList.add(esValido ? 'valid-drop' : 'invalid-ghost');
 }
 
 function handleDrop(e) {
     e.preventDefault();
     if (!this.classList.contains('valid-drop')) return;
-    
-    const p = CONFIG.piezas.find(x => x.id === draggingPieceId);
     const r = parseInt(this.dataset.row), c = parseInt(this.dataset.col);
-    const army = draggingArmy;
 
-    if (!bandoQueEmpezo && p.id === "fortaleza") {
-        bandoQueEmpezo = army;
-        turnoActual = army;
-        const mitadElegida = (r < 5) ? 'norte' : 'sur';
-        const otraMitad = (mitadElegida === 'norte') ? 'sur' : 'norte';
-        const otroBando = (army === 'rojo') ? 'negro' : 'rojo';
+    if (faseJuego === "despliegue") {
+        if (!bandoQueEmpezo && draggingPieceId === "fortaleza") {
+            bandoQueEmpezo = draggingArmy; turnoActual = draggingArmy;
+            mitadesAsignadas[draggingArmy] = (r < 5) ? 'norte' : 'sur';
+            mitadesAsignadas[draggingArmy==='rojo'?'negro':'rojo'] = (r < 5) ? 'sur' : 'norte';
+        }
+        const gId = `g-${Date.now()}`;
+        const p = CONFIG.piezas.find(x => x.id === draggingPieceId);
+        for (let i = 0; i < p.size; i++) {
+            for (let j = 0; j < p.size; j++) {
+                const t = document.querySelector(`[data-row="${r+i}"][data-col="${c+j}"]`);
+                const img = createPieceImg(draggingArmy, draggingPieceId, gId);
+                t.appendChild(img);
+            }
+        }
+        if (draggingPieceId === "fortaleza") { fortalezaColocada[draggingArmy] = true; actualizarZonas(r, c, draggingArmy); }
+        stock[draggingArmy][draggingPieceId]--;
+        updateInventories();
+    } else {
+        // EJECUCIÓN MOVIMIENTO COMBATE
+        const img = draggingOriginTile.querySelector('.piece-on-board');
+        const gid = img.dataset.groupId;
         
-        mitadesAsignadas[army] = mitadElegida;
-        mitadesAsignadas[otroBando] = otraMitad;
-    }
+        if (r === parseInt(draggingOriginTile.dataset.row) && c === parseInt(draggingOriginTile.dataset.col)) {
+            if (chusmasMovidasEsteTurno > 0) finalizarTurnoCombate();
+            return;
+        }
 
-    const gId = `g-${Date.now()}`;
-    for (let i = 0; i < p.size; i++) {
-        for (let j = 0; j < p.size; j++) {
-            const t = document.querySelector(`[data-row="${r+i}"][data-col="${c+j}"]`);
-            const img = document.createElement('img');
-            img.src = getUrl(army, p.archivo);
-            img.className = "piece-on-board";
-            img.dataset.army = army; 
-            img.dataset.pieceId = p.id; 
-            img.dataset.groupId = gId;
-            t.appendChild(img);
+        this.appendChild(img);
+        if (draggingPieceId === "chusma") {
+            chusmasMovidasEsteTurno++;
+            ultimaChusmaGid = gid;
+            if (chusmasMovidasEsteTurno >= 2) finalizarTurnoCombate();
+            else document.getElementById('status-msg').innerText = "Medio turno gastado. Mueve otra Chusma o click en la misma para pasar.";
+        } else {
+            finalizarTurnoCombate();
         }
     }
+}
 
-    if (p.id === "fortaleza") {
-        fortalezaColocada[army] = true;
-        actualizarZonas(r, c, army);
-        document.getElementById('status-msg').innerText = `Turno: ${army.toUpperCase()} (${mitadesAsignadas[army]})`;
-    }
-    stock[army][p.id]--;
+function createPieceImg(army, pid, gid) {
+    const img = document.createElement('img');
+    img.src = getUrl(army, CONFIG.piezas.find(x=>x.id===pid).archivo);
+    img.className = "piece-on-board";
+    img.dataset.army = army; img.dataset.pieceId = pid; img.dataset.groupId = gid;
+    img.draggable = true;
+    img.ondragstart = (e) => {
+        if (faseJuego === "combate" && img.dataset.army !== turnoActual) { e.preventDefault(); return; }
+        // Si ya movió una chusma, no puede mover la misma otra vez para avanzar, solo para finalizar
+        if (chusmasMovidasEsteTurno === 1 && img.dataset.groupId === ultimaChusmaGid && faseJuego === "combate") {
+             // Solo permitimos drag si es para soltar en el mismo sitio (finalizar)
+        }
+        draggingPieceId = img.dataset.pieceId;
+        draggingArmy = img.dataset.army;
+        draggingOriginTile = img.parentElement;
+    };
+    return img;
+}
+
+function finalizarTurnoCombate() {
+    chusmasMovidasEsteTurno = 0; ultimaChusmaGid = null;
+    turnoActual = (turnoActual === 'rojo') ? 'negro' : 'rojo';
+    document.getElementById('status-msg').innerText = `Turno del ${turnoActual.toUpperCase()}`;
     updateInventories();
 }
 
@@ -248,55 +225,32 @@ function handleFortressClick(e) {
     if (faseJuego !== "despliegue") return;
     const img = e.currentTarget.querySelector('.piece-on-board');
     if (!img || img.dataset.pieceId !== 'fortaleza' || img.dataset.army !== turnoActual) return;
-    
     const army = img.dataset.army;
-
-    const incompleto = zonasDespliegue[army].some(coord => {
+    if (stock[army].montana > 0 || zonasDespliegue[army].some(coord => {
         const [r, c] = coord.split(',');
         const t = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
         return t.children.length === 0 && !t.classList.contains('water');
-    });
-
-    if (stock[army].montana > 0 || incompleto) {
-        alert("Termina de rodear el castillo y pon las 3 montañas.");
-        return;
-    }
+    })) { alert("Completa el despliegue."); return; }
 
     document.querySelectorAll(`.piece-on-board[data-army="${army}"]`).forEach(i => i.style.opacity = "0");
     document.querySelectorAll('.tile').forEach(t => t.classList.remove('deploy-zone'));
-
-    const otroBando = (army === 'rojo') ? 'negro' : 'rojo';
     if (army === bandoQueEmpezo) {
-        turnoActual = otroBando;
-        document.getElementById('status-msg').innerText = `Turno: ${otroBando.toUpperCase()} (${mitadesAsignadas[otroBando]})`;
-        alert(`Le toca al ${otroBando.toUpperCase()}.`);
+        turnoActual = (army === 'rojo') ? 'negro' : 'rojo';
     } else {
-        faseJuego = "combate";
-        turnoActual = bandoQueEmpezo;
+        faseJuego = "combate"; turnoActual = bandoQueEmpezo;
         document.querySelectorAll('.piece-on-board').forEach(i => i.style.opacity = "1");
-        document.getElementById('status-msg').innerText = `¡BATALLA! Turno del ${turnoActual.toUpperCase()}`;
-        alert("¡A jugar!");
     }
     updateInventories();
+    document.getElementById('status-msg').innerText = faseJuego === "combate" ? `¡COMBATE! Turno del ${turnoActual.toUpperCase()}` : `Turno: ${turnoActual.toUpperCase()}`;
 }
 
 function handleRemove(e) {
-    e.preventDefault();
-    if (faseJuego !== "despliegue") return;
+    e.preventDefault(); if (faseJuego !== "despliegue") return;
     const img = e.currentTarget.querySelector('.piece-on-board');
     if (!img) return;
     const army = img.dataset.army, pid = img.dataset.pieceId, gid = img.dataset.groupId;
-    
-    if (pid === 'fortaleza') {
-        fortalezaColocada[army] = false;
-        document.querySelectorAll('.deploy-zone').forEach(t => t.classList.remove('deploy-zone'));
-        if(army === bandoQueEmpezo) {
-            bandoQueEmpezo = null;
-            turnoActual = null;
-            mitadesAsignadas = { rojo: null, negro: null };
-            document.getElementById('status-msg').innerText = "El primer jugador elige color y mitad";
-        }
-    }
+    if (pid === 'fortaleza' && army === bandoQueEmpezo) { bandoQueEmpezo = null; turnoActual = null; mitadesAsignadas = { rojo: null, negro: null }; }
+    if (pid === 'fortaleza') fortalezaColocada[army] = false;
     stock[army][pid]++;
     document.querySelectorAll(`[data-group-id="${gid}"]`).forEach(el => el.remove());
     updateInventories();
@@ -304,24 +258,20 @@ function handleRemove(e) {
 
 function actualizarZonas(r, c, army) {
     const coords = [];
-    const mitad = mitadesAsignadas[army];
-    const minR = (mitad === 'norte') ? 0 : 5, maxR = (mitad === 'norte') ? 4 : 9;
-    
+    const minR = (mitadesAsignadas[army] === 'norte') ? 0 : 5, maxR = (mitadesAsignadas[army] === 'norte') ? 4 : 9;
     for (let i = r - 1; i <= r + 2; i++) {
         for (let j = c - 1; j <= c + 2; j++) {
-            if (!(i >= r && i <= r + 1 && j >= c && j <= c + 1)) {
-                if (i >= minR && i <= maxR && j >= 0 && j < 10) {
-                    coords.push(`${i},${j}`);
-                    const t = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
-                    if (t && !t.classList.contains('water')) t.classList.add('deploy-zone');
-                }
+            if (!(i >= r && i <= r + 1 && j >= c && j <= c + 1) && i >= minR && i <= maxR && j >= 0 && j < 10) {
+                coords.push(`${i},${j}`);
+                const t = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                if (t && !t.classList.contains('water')) t.classList.add('deploy-zone');
             }
         }
     }
     zonasDespliegue[army] = coords;
 }
 
-window.onload = init;
+init();
 </script>
 </body>
 </html>

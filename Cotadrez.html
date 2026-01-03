@@ -1212,7 +1212,9 @@
                         gameState = 'playing-chusma-bonus';
                         chusmaMovedCoords = { r: r, c: c };
                         // Ahora este mensaje SÍ se verá gracias al bloqueo
-                        showNotification("⚡ ¡Marcha ligera! Mueve otra Chusma o haz click en esta para terminar.");
+
+                        /* showNotification("⚡ ¡Marcha ligera! Mueve otra Chusma o haz click en esta para terminar."); */
+
                         renderBoard(); updateInventories(); updateDungeons();
                         checkTurnStatus();
                         return;
@@ -1236,9 +1238,9 @@
 
                     // 3. TERCERO: Notificamos
                     // Usamos el objeto siegeStatus para ver si la fortaleza del DEFENSOR sigue asediada
-                    if (siegeStatus[defender]) {
-                        showNotification("🔄 Asedio reposicionado. Turno de defensa.");
-                    } else {
+                    // 3. TERCERO: Notificamos
+                    // Solo avisamos si se CANCELA. Si sigue asediado, la barra ROJA de checkTurnStatus ya está puesta.
+                    if (!siegeStatus[defender]) {
                         showNotification("🏳️ Asedio cancelado. El defensor respira.");
                     }
 
@@ -1272,6 +1274,7 @@
                         /* showNotification(`⚔️ ASEDIO LISTO: Pulsa la Fortaleza enemiga para ejecutar o mueve una pieza para cancelar.`); */
 
                         renderBoard(); updateInventories(); updateDungeons();
+                        updateStatusBar();
                         return;
                     }
                 }
@@ -1504,8 +1507,8 @@
 
             if (enemyReserveCount > 0) {
                 // --- CASO A: EL ENEMIGO TIENE RESERVAS (ASEDIO NORMAL) ---
-                const msg = `🚁 ¡RESCATE ÉPICO!`;
-                showNotification(msg); // Mensaje corto para que no solape
+                /* const msg = `🚁 ¡RESCATE ÉPICO!`;
+                 showNotification(msg); // Mensaje corto para que no solape */
 
                 gameState = 'siege-resolution';
                 besiegedArmy = jailerArmy;
@@ -1805,7 +1808,7 @@
             chusmaMovedCoords = null;
 
             /* showNotification(`Turno ${getArmyName(turnColor)}`); */
-            
+
             renderBoard();
             updateInventories();
             checkTurnStatus();
@@ -2121,16 +2124,16 @@
             }, 3000);
         }
 
-function updateStatusBar() {
+        function updateStatusBar() {
             const bar = document.getElementById('status-bar');
-            
+
             // Calculamos si la situación es CRÍTICA
             // AÑADIDO: 'siege-prisoner-select' para que no parpadee al elegir prisionero
             const isCritical = (
-                gameState === 'siege-resolution' || 
+                gameState === 'siege-resolution' ||
                 gameState === 'siege-confirmation' ||
-                gameState === 'siege-prisoner-select' || 
-                siegeStatus[turnColor] === true || 
+                gameState === 'siege-prisoner-select' ||
+                siegeStatus[turnColor] === true ||
                 isCheck
             );
 
@@ -2142,7 +2145,7 @@ function updateStatusBar() {
 
             if (isCritical) {
                 bar.classList.add('status-critical');
-                bar.style.opacity = 1; 
+                bar.style.opacity = 1;
             } else {
                 bar.classList.remove('status-critical');
                 if (!bar.style.color || bar.style.color === 'rgb(231, 76, 60)') {
@@ -2182,7 +2185,7 @@ function updateStatusBar() {
             }
 
             // 2. Notificar
-            showNotification("⚔️ Asedio sin prisioneros: Tropas replegadas. ¡EL ENEMIGO DEBE SACRIFICAR!");
+            /* showNotification("⚔️ Asedio sin prisioneros: Tropas replegadas. ¡EL ENEMIGO DEBE SACRIFICAR!"); */
 
             // 3. Activar Fase de Sacrificio (Usando tu mecánica existente en handleDrop)
             gameState = 'siege-resolution';
@@ -2202,31 +2205,38 @@ function updateStatusBar() {
 
         // 1. Caso A: El jugador hace click en un prisionero (Ya tenías el onclick en updateDungeons)
         function selectPrisonerToRescue(jailerArmy, index) {
-            // jailerArmy es el Defensor (donde estaban presos). 
-            // turnColor es el Atacante (quien está eligiendo).
             const attackerArmy = turnColor;
             const defenderArmy = jailerArmy;
             const prisoner = dungeons[jailerArmy][index];
 
-            // 1. Recuperar prisionero (Vuelve a la reserva del atacante)
+            // 1. Recuperar prisionero
             dungeons[jailerArmy].splice(index, 1);
             reserves[attackerArmy][prisoner.type]++;
 
-            showNotification(`🔓 ¡${prisoner.type.toUpperCase()} LIBERADO!`);
-
-            // 2. Retirar tropas de asedio (Vuelven a casa)
+            // 2. Retirar tropas de asedio
             executeSiegeReturn(defenderArmy, attackerArmy);
 
-            // 3. TURNO DEL DEFENSOR: Intentar salvar algo (Hubo intercambio = TRUE)
-            startSacrificePhase(defenderArmy, true);
+            // 3. INFORMAR AL JUGADOR (Restauramos notificación explicativa)
+            showNotification(`🔓 ${prisoner.type.toUpperCase()} rescatado. Prisionero y tropas regresan a tu RESERVA.`);
+
+            // 4. TRANSICIÓN CON PAUSA (2 segundos para leer antes de la alarma roja)
+            setTimeout(() => {
+                startSacrificePhase(defenderArmy, true);
+            }, 2000);
         }
+
         // 2. Caso B: No había prisioneros (Asedio "accidental" o sin botín)
         function resolveSiegeNoPrisoners(attacker, victim) {
-            // A. Devolver tropas del atacante a casa
+            // 1. Devolver tropas de asedio a casa
             executeSiegeReturn(victim, attacker);
 
-            // B. Verificar consecuencias para el defensor (Hubo intercambio = FALSE)
-            startSacrificePhase(victim, false);
+            // 2. INFORMAR
+            showNotification("🔄 Asedio finalizado. Tus tropas regresan a la RESERVA.");
+
+            // 3. PAUSA DE LECTURA (2 segundos)
+            setTimeout(() => {
+                startSacrificePhase(victim, false);
+            }, 2000);
         }
 
         // Auxiliar: Devuelve las tropas de asedio a casa (VERSIÓN BLINDADA)
@@ -2327,10 +2337,11 @@ function updateStatusBar() {
                 // CASO A: HAY RESCATE REAL -> EL ATACANTE ELIGE
                 turnColor = attackerArmy;
                 gameState = 'siege-prisoner-select';
-                
+
                 /* showNotification(`⚔️ ASEDIO ÉPICO: ${attackerArmy.toUpperCase()}, elige a quién rescatar.`); */
-                
+
                 renderBoard(); updateInventories(); updateDungeons();
+                updateStatusBar();
             } else {
                 // CASO B: NO HAY PRISIONEROS -> RESOLUCIÓN DIRECTA
                 resolveSiegeNoPrisoners(attackerArmy, defenderArmy);

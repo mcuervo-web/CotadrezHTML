@@ -170,6 +170,28 @@
             }
         }
 
+        /* Feedback de disparo - ORIGEN (Dorado) */
+        .shot-source {
+            box-shadow: inset 0 0 40px rgba(241, 196, 15, 0.8) !important;
+            /* Gold intenso */
+            animation: pulse-shot-gold 1.5s infinite;
+            z-index: 5 !important;
+        }
+
+        @keyframes pulse-shot-gold {
+            0% {
+                box-shadow: inset 0 0 20px rgba(241, 196, 15, 0.4);
+            }
+
+            50% {
+                box-shadow: inset 0 0 50px rgba(241, 196, 15, 1);
+            }
+
+            100% {
+                box-shadow: inset 0 0 20px rgba(241, 196, 15, 0.4);
+            }
+        }
+
         /* Sección Inferior: Mazmorra */
         .dungeon-section {
             height: 180px;
@@ -416,6 +438,8 @@
 
         let besiegedArmy = null; // Guardará 'rojo' o 'negro' durante la resolución del asedio
 
+        let isBesieged = false; // Nueva bandera para el estado de Asedio
+
         let currentThreatMap = null; // Guardará el mapa de calor actual
 
         let isCheck = false; // Nueva bandera para el estado de Jaque
@@ -507,12 +531,12 @@
                     tile.dataset.r = r;
                     tile.dataset.c = c;
 
-                    // --- NUEVO: PINTAR RASTRO DE DISPARO ---
-                    // Si esta casilla está en la lista de disparos recientes, la iluminamos
-                    if (shotHighlights.some(h => h.r === r && h.c === c)) {
-                        tile.classList.add('shot-highlight');
+                    // --- NUEVO: PINTAR RASTRO DE DISPARO (Diferenciando Origen/Destino) ---
+                    const shot = shotHighlights.find(h => h.r === r && h.c === c);
+                    if (shot) {
+                        if (shot.type === 'source') tile.classList.add('shot-source'); // Dorado
+                        else tile.classList.add('shot-highlight'); // Oscuro
                     }
-                    // ---------------------------------------
 
                     tile.ondragover = (e) => handleDragOver(e, r, c);
                     tile.ondrop = (e) => handleDrop(e, r, c);
@@ -998,9 +1022,9 @@
                             // Si son estas armas y atacan, NO SE MUEVEN.
                             if (data.type === 'trabuquete' || data.type === 'escorpion') {
 
-                                // 1. Registrar coordenadas para el efecto visual (Origen + Destino)
-                                shotHighlights.push({ r: data.originR, c: data.originC }); // Arma
-                                shotHighlights.push({ r: r, c: c }); // Víctima
+                                // 1. Registrar coordenadas con TIPO
+                                shotHighlights.push({ r: data.originR, c: data.originC, type: 'source' }); // Arma (Dorado)
+                                shotHighlights.push({ r: r, c: c, type: 'target' }); // Víctima (Oscuro)
 
                                 // 2. Caso Especial ESCORPIÓN (Doble Kill)
                                 if (data.type === 'escorpion') {
@@ -1015,7 +1039,7 @@
                                             // ¡Enemigo intermedio perforado!
                                             dungeons[data.army].push({ type: obs.type, army: obs.army });
                                             logicBoard[cR][cC] = null; // Eliminar del tablero
-                                            shotHighlights.push({ r: cR, c: cC }); // Resaltar también a este
+                                            shotHighlights.push({ r: cR, c: cC, type: 'target' }); // Víctima intermedia (Oscuro)
                                         }
                                         cR += sR; cC += sC;
                                     }
@@ -1083,7 +1107,7 @@
                 turnColor = (turnColor === 'rojo') ? 'negro' : 'rojo';
                 gameState = 'playing';
                 chusmaMovedCoords = null;
-                showNotification(`Turno de ${turnColor.toUpperCase()}`);
+                showNotification(`Turno ${getArmyName(turnColor)}`);
                 renderBoard(); updateInventories(); updateDungeons();
                 checkTurnStatus();
                 return;
@@ -1235,6 +1259,9 @@
             // Repintar (se quita la niebla)
             renderBoard();
             updateInventories();
+
+            // --- NUEVO: Verificar si empezamos ya en Jaque ---
+            checkTurnStatus();
         }
 
         function attemptRescue(jailerArmy, captiveIndex, captive) {
@@ -1301,17 +1328,19 @@
         function getStatusText() {
             if (gameState === 'game-over') return document.getElementById('status-bar').innerText;
 
-            // 1. PRIORIDAD MÁXIMA: ASEDIO
+            const currentArmy = getArmyName(turnColor);
+
+            // 1. ASEDIO
             if (gameState === 'siege-resolution') {
-                return `🔥 ¡ASEDIO! ${turnColor.toUpperCase()} DEBE SALVAR UNA PIEZA O PERDERÁ EL RESTO.`;
+                return `🔥 ¡ASEDIO TOTAL! EL EJÉRCITO ${currentArmy} DEBE SALVAR UNA PIEZA (EL RESTO MORIRÁ).`;
             }
 
-            // 2. PRIORIDAD ALTA: JAQUE
+            // 2. JAQUE
             if (isCheck) {
-                return `⚠️ ¡JAQUE AL REY ${turnColor.toUpperCase()}! DEBES PROTEGERLO. ⚠️`;
+                return `⚠️ ¡JAQUE AL REY ${currentArmy}! DEBES PROTEGERLO. ⚠️`;
             }
 
-            // 3. PRIORIDAD MEDIA: BONUS CHUSMA
+            // 3. BONUS CHUSMA
             if (gameState === 'playing-chusma-bonus') {
                 return `⚡ BONIFICACIÓN CHUSMA: Mueve otra unidad de Chusma o finaliza el turno.`;
             }
@@ -1319,7 +1348,9 @@
             // 4. ESTÁNDAR
             if (gameState === 'init') return "Elige tu destino: Arrastra una Fortaleza para empezar.";
             if (gameState.includes('deploy')) return `Fase Despliegue: ${(gameState === 'deploy-p1' ? p1Color : p2Color).toUpperCase()}`;
-            if (gameState === 'playing') return `Turno de ${turnColor.toUpperCase()}`;
+
+            // Aquí está el cambio principal del turno:
+            if (gameState === 'playing') return `Turno ${currentArmy}`;
 
             return "Cotadrez";
         }
@@ -1528,7 +1559,7 @@
             gameState = 'playing';
             chusmaMovedCoords = null;
 
-            showNotification(`Turno de ${turnColor.toUpperCase()}`);
+            showNotification(`Turno ${getArmyName(turnColor)}`);
             renderBoard();
             updateInventories();
             checkTurnStatus();
@@ -1638,11 +1669,11 @@
                 else return !(isBlocked(r1, c1 + sC) || isBlocked(r1, c2)) || !(isBlocked(r2, c1) || isBlocked(r2, c1 + sC));
             }
 
-// 5. UNIDADES DE RAYCAST (Dragón, Elefante, Armas)
+            // 5. UNIDADES DE RAYCAST (Dragón, Elefante, Armas)
             const checkRay = (isOrtho, isDiag, canFly, isWeapon) => {
                 // 1. VALIDACIÓN GEOMÉTRICA (Corregida)
                 const validOrtho = (r1 === r2 || c1 === c2);
-                const validDiag  = (dR === dC);
+                const validDiag = (dR === dC);
 
                 if (isOrtho && isDiag) {
                     // Caso Dragón (Reina): Vale cualquiera de los dos
@@ -1659,45 +1690,45 @@
                 const sR = Math.sign(r2 - r1);
                 const sC = Math.sign(c2 - c1);
                 let cR = r1 + sR, cC = c1 + sC;
-                
-                let enemiesInPath = 0; 
+
+                let enemiesInPath = 0;
                 let lastEnemyPos = null;
 
                 while (cR !== r2 || cC !== c2) {
                     // ... (El resto del bucle while se queda IGUAL que lo tenías) ...
                     const obs = logicBoard[cR][cC];
-                    
+
                     if (canFly) {
-                        if (obs && obs.type !== 'montana') return false; 
+                        if (obs && obs.type !== 'montana') return false;
                     } else {
                         if (terrain[cR][cC] === 'water' && !isWeapon) return false;
                         if (obs) {
                             if (obs.type === 'montana' || obs.type === 'fortaleza') return false;
-                            
+
                             if (isWeapon && type === 'escorpion') {
-                                if (obs.army !== army) { enemiesInPath++; lastEnemyPos = {r:cR, c:cC}; }
-                                else return false; 
+                                if (obs.army !== army) { enemiesInPath++; lastEnemyPos = { r: cR, c: cC }; }
+                                else return false;
                             } else if (isWeapon && type === 'trabuquete') {
                                 // Ignora unidades
                             } else {
-                                return false; 
+                                return false;
                             }
                         }
                     }
                     cR += sR; cC += sC;
                 }
-                
+
                 // ... (Lógica final de Escorpión igual) ...
                 if (type === 'escorpion' && enemiesInPath > 0) {
                     if (enemiesInPath === 1) {
                         const dist = Math.abs(r2 - lastEnemyPos.r);
                         return (dist >= 1 && dist <= 3);
                     }
-                    return false; 
+                    return false;
                 }
                 return true;
             };
-            
+
             if (type === 'dragon') return checkRay(true, true, true, false); // Vuela, Ortho+Diag
             if (type === 'elefante') return checkRay(true, false, false, false); // Tierra, Ortho
 
@@ -1710,12 +1741,10 @@
 
         // Verifica si el jugador del turno actual (turnColor) ha perdido o empatado
         function checkTurnStatus() {
-            // 1. Calcular mapa de amenazas CONTRA el jugador actual
             const enemy = (turnColor === 'rojo') ? 'negro' : 'rojo';
-            // Usamos tu función existente
             const threatMap = getThreatMap(enemy);
 
-            // 2. Buscar al Rey actual
+            // A. BUSCAR AL REY Y CHEQUEAR JAQUE
             let kingPos = null;
             let hasPieces = false;
 
@@ -1729,42 +1758,58 @@
                 }
             }
 
-            if (!kingPos) return; // (Raro, rey capturado antes)
+            if (!kingPos) return;
 
-            // 3. ¿Está el Rey en Jaque?
-            isCheck = (threatMap[kingPos.r][kingPos.c] > 0); // <--- GUARDAMOS EL ESTADO
+            // 1. Detección de Jaque
+            isCheck = (threatMap[kingPos.r][kingPos.c] > 0);
 
-            // Si hay jaque, lo mostramos inmediatamente como prioritario
-            if (isCheck) {
-                // Ya no necesitamos showNotification temporal, actualizamos la barra fija
-                updateStatusBar();
-                // Opcional: Sonido de alerta
+            // B. NUEVO: DETECCIÓN DE ASEDIO (FORTALEZA RODEADA)
+            isBesieged = false;
+            const myFort = fortressPos[turnColor];
+
+            if (myFort) {
+                let enemiesAtGate = 0;
+                // Revisamos todo el tablero buscando enemigos en MI anillo
+                for (let r = 0; r < 10; r++) {
+                    for (let c = 0; c < 10; c++) {
+                        // Si la casilla es parte de mi anillo de salida
+                        if (isInExitZone(r, c, myFort)) {
+                            const p = logicBoard[r][c];
+                            // Y hay una unidad enemiga
+                            if (p && p.army === enemy) {
+                                enemiesAtGate++;
+                            }
+                        }
+                    }
+                }
+                // Si hay 2 o más, estamos asediados
+                if (enemiesAtGate >= 2) isBesieged = true;
             }
-            // 4. ¿Tiene algún movimiento legal? (Para ver si es Mate o Ahogado)
-            // IMPORTANTE: Simulamos un "DragStart" virtual para que isValidMove tenga el mapa
-            currentThreatMap = threatMap;
 
+            // C. ACTUALIZAR INTERFAZ (PRIORIDAD ALERTA)
+            if (isCheck || isBesieged) {
+                updateStatusBar();
+                // Opcional: Sonido de alarma aquí
+            }
+
+            // D. VERIFICAR MOVIMIENTOS LEGALES (MATE / AHOGADO)
+            currentThreatMap = threatMap;
             let hasMoves = false;
 
-            // Recorremos todas mis piezas para ver si ALGUNA puede mover
             outerLoop:
             for (let r = 0; r < 10; r++) {
                 for (let c = 0; c < 10; c++) {
                     const p = logicBoard[r][c];
                     if (p && p.army === turnColor) {
-                        // Probamos moverlas a todo el tablero
                         for (let tr = 0; tr < 10; tr++) {
                             for (let tc = 0; tc < 10; tc++) {
-                                // Usamos tu isValidMove (que ahora protege al rey)
                                 if (isValidMove(p.type, r, c, tr, tc)) {
-                                    // Validaciones extra de terreno/ocupación básicas que no están en isValidMove
-                                    // (Copiamos la lógica básica de handleDrop para asegurar)
+                                    // Validaciones básicas extra (terreno, ocupación propia)
                                     if (terrain[tr][tc] === 'water' && p.type !== 'trabuquete' && p.type !== 'escorpion') continue;
                                     const target = logicBoard[tr][tc];
                                     if (target && target.army === turnColor && p.type !== 'lanceros') continue;
                                     if (target && (target.type === 'montana' || target.type === 'fortaleza')) continue;
 
-                                    // ¡Encontramos al menos un movimiento válido!
                                     hasMoves = true;
                                     break outerLoop;
                                 }
@@ -1774,17 +1819,16 @@
                 }
             }
 
-            // 5. Resolución
+            // E. RESOLUCIÓN DE PARTIDA
             if (!hasMoves) {
                 if (isCheck) {
-                    // Jaque + Sin Movimientos = MATE
-                    finishGame((turnColor === 'rojo' ? 'negro' : 'rojo'), "POR JAQUE MATE");
+                    finishGame(enemy, "POR JAQUE MATE");
                 } else {
-                    // No Jaque + Sin Movimientos = AHOGADO
                     finishGame(null, "TABLAS POR REY AHOGADO");
                 }
             }
         }
+
 
         // Helper para terminar partida (si no la tenías ya de mis intentos anteriores)
         function finishGame(winnerArmy, reason = "") {
@@ -1799,19 +1843,30 @@
         // Actualiza la barra de estado gestionando prioridades y colores
         function updateStatusBar() {
             const bar = document.getElementById('status-bar');
-            const text = getStatusText(); // Obtenemos el mensaje correcto
+            const text = getStatusText();
             bar.innerText = text;
 
-            // Lógica de Pánico: Si es Asedio o Jaque -> ROJO PARPADEANTE
-            if (gameState === 'siege-resolution' || isCheck) {
+            // AÑADIMOS isBesieged A LA CONDICIÓN DE PÁNICO
+            if (gameState === 'siege-resolution' || isCheck || isBesieged) {
                 bar.classList.add('status-critical');
             } else {
                 bar.classList.remove('status-critical');
-                // Restaurar color dorado por defecto si venimos de un error
                 if (!bar.style.color || bar.style.color === 'rgb(231, 76, 60)') {
                     bar.style.color = 'var(--c-gold)';
                 }
             }
+        }
+
+        // Traduce el color del ejército a su territorio (Norte/Sur)
+        function getArmyName(armyColor) {
+            // Si aún no hemos definido territorios (inicio), devolvemos el color
+            if (!p1Territory) return "DE " + armyColor.toUpperCase();
+
+            const isP1 = (armyColor === p1Color);
+            // Si soy P1 y P1 es Norte -> Norte. Si no -> Sur.
+            const isNorth = isP1 ? (p1Territory === 'north') : (p1Territory === 'south');
+
+            return isNorth ? "DEL NORTE" : "DEL SUR";
         }
 
     </script>

@@ -198,6 +198,16 @@
         }
     }
 
+/* GHOSTING (Feedback Visual) */
+        .ghost-valid { 
+            background-color: rgba(46, 204, 113, 0.6) !important; /* Verde */
+            box-shadow: inset 0 0 0 2px #27ae60; 
+        }
+        .ghost-invalid { 
+            background-color: rgba(231, 76, 60, 0.6) !important; /* Rojo */
+            box-shadow: inset 0 0 0 2px #c0392b; 
+        }
+
     </style>
 </head>
 <body>
@@ -258,7 +268,11 @@
 
 // Matriz para el TERRENO (Agua) - Esta ya la tenías, déjala igual
     let terrain = Array(10).fill().map(() => Array(10).fill(null));
-  
+ 
+    let draggingMeta = null; // Guardará qué estamos moviendo
+    
+    let fortressPos = { rojo: null, negro: null };
+ 
   // Función auxiliar para mostrar mensajes temporales
     function showNotification(msg, isError = false) {
         const bar = document.getElementById('status-bar');
@@ -315,7 +329,7 @@ function renderBoard() {
                 tile.dataset.c = c;
 
                 // --- CAMBIO 1: La casilla escucha eventos de soltar ---
-                tile.ondragover = (e) => handleDragOver(e);
+                tile.ondragover = (e) => handleDragOver(e, r, c);
                 tile.ondrop = (e) => handleDrop(e, r, c);
                 // ----------------------------------------------------
 
@@ -341,6 +355,29 @@ function renderBoard() {
                 b.appendChild(tile);
             }
         }
+    }
+
+
+    // Verifica si una casilla está en el "Anillo de Salida" (perímetro adyacente)
+    function isInExitZone(r, c, fOrigin) {
+        if (!fOrigin) return false;
+        
+        // La fortaleza ocupa (fr, fc) hasta (fr+1, fc+1)
+        // El anillo va desde (fr-1, fc-1) hasta (fr+2, fc+2)
+        const minR = fOrigin.r - 1;
+        const maxR = fOrigin.r + 2;
+        const minC = fOrigin.c - 1;
+        const maxC = fOrigin.c + 2;
+
+        // 1. Debe estar dentro del rectángulo exterior
+        if (r >= minR && r <= maxR && c >= minC && c <= maxC) {
+            // 2. Pero NO debe ser la propia fortaleza (el hueco central)
+            if (r >= fOrigin.r && r <= fOrigin.r+1 && c >= fOrigin.c && c <= fOrigin.c+1) {
+                return false; // Es la propia estructura
+            }
+            return true; // Es el anillo
+        }
+        return false;
     }
 
 // Arrancar
@@ -392,104 +429,192 @@ function updateInventories() {
 // --- 4. LÓGICA DE ARRASTRAR Y SOLTAR ---
 
     // 1. Al empezar a arrastrar (desde Inventario o Tablero)
-    function handleDragStart(e, source, army, type, r = null, c = null) {
-        // Guardamos los datos de la pieza que viaja
-        const data = {
-            source: source, // 'reserve' o 'board'
-            army: army,
-            type: type,
-            originR: r,     // Solo si viene del tablero
-            originC: c      // Solo si viene del tablero
-        };
-        e.dataTransfer.setData('text/plain', JSON.stringify(data));
-        e.dataTransfer.effectAllowed = 'move';
+ function handleDragStart(e, source, army, type, r = null, c = null) {
+    // 1. Guardamos metadatos en variable global para el Ghosting
+    draggingMeta = { type: type, army: army };
+
+    // 2. Datos estándar para el Drop
+    const data = { source, army, type, originR: r, originC: c };
+    e.dataTransfer.setData('text/plain', JSON.stringify(data));
+    e.dataTransfer.effectAllowed = 'move';
+}
+    // 2. Permitir soltar (El navegador bloquea por defecto, hay que prevenirlo)
+// Función auxiliar para limpiar fantasmas previos
+    function clearGhosts() {
+        document.querySelectorAll('.ghost-valid, .ghost-invalid').forEach(el => {
+            el.classList.remove('ghost-valid', 'ghost-invalid');
+        });
     }
 
-    // 2. Permitir soltar (El navegador bloquea por defecto, hay que prevenirlo)
-    function handleDragOver(e) {
+    // Nueva función DragOver con lógica de visualización
+
+function handleDragOver(e, r, c) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
+
+        if (!draggingMeta) return;
+
+        clearGhosts();
+
+        const army = draggingMeta.army;
+        const type = draggingMeta.type;
+        const isFortress = type === 'fortaleza';
+        const isMountain = type === 'montana';
+        
+        // Buscar si ya tenemos fortaleza en el tablero
+        const fOrigin = fortressPos[army];
+        const hasFortress = fOrigin !== null;
+
+        // --- DEFINIR CELDAS ---
+        let cells = [];
+        if (isFortress) {
+            if (r + 1 > 9 || c + 1 > 9) { // Se sale del mapa
+                const tile = document.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);
+                if(tile) tile.classList.add('ghost-invalid');
+                return;
+            }
+            cells.push({r:r, c:c}, {r:r, c:c+1}, {r:r+1, c:c}, {r:r+1, c:c+1});
+        } else {
+            cells.push({r:r, c:c});
+        }
+
+        // --- VALIDAR REGLAS ---
+        let isValid = true;
+
+        // 1. REGLA DE DEPENDENCIA (Si no es fortaleza, ¿tenemos fortaleza?)
+        // (Las montañas suelen ser independientes, pero las unidades NO)
+        if (!isFortress && !hasFortress && !isMountain) {
+            isValid = false; 
+        }
+
+        // 2. REGLA DEL ANILLO DE SALIDA (Solo para unidades, no montañas ni la propia fortaleza)
+        if (!isFortress && !isMountain && hasFortress) {
+            if (!isInExitZone(r, c, fOrigin)) {
+                isValid = false;
+            }
+        }
+
+        // 3. REGLA ZONA FORTALEZA (Al colocar la fortaleza)
+        if (isFortress) {
+            const invalidRows = [0, 4, 5, 9]; 
+            const invalidCols = [0, 9];
+            if (invalidRows.includes(r) || invalidRows.includes(r+1)) isValid = false;
+            if (invalidCols.includes(c) || invalidCols.includes(c+1)) isValid = false;
+        }
+
+        // 4. REGLA AGUA Y OCUPACIÓN
+        for (let cell of cells) {
+            if (terrain[cell.r][cell.c] === 'water' && !isFortress) isValid = false;
+            if (logicBoard[cell.r][cell.c] !== null) isValid = false;
+        }
+
+        // --- PINTAR ---
+        const className = isValid ? 'ghost-valid' : 'ghost-invalid';
+        cells.forEach(cell => {
+            const tile = document.querySelector(`.tile[data-r="${cell.r}"][data-c="${cell.c}"]`);
+            if (tile) tile.classList.add(className);
+        });
     }
 
-    // 3. Al soltar en una casilla
+
+// 3. Al soltar en una casilla
+
 function handleDrop(e, r, c) {
         e.preventDefault();
+        clearGhosts();
+        
         const rawData = e.dataTransfer.getData('text/plain');
         if (!rawData) return;
-        
         const data = JSON.parse(rawData);
+        draggingMeta = null;
+
         const isFortress = (data.type === 'fortaleza');
+        const isMountain = (data.type === 'montana');
+        
+        // Buscar Fortaleza existente
+        const fOrigin = fortressPos[data.army];
+        const hasFortress = fOrigin !== null;
 
-        // --- VALIDACIONES PREVIAS ---
+        // --- VALIDACIONES DE REGLAS ---
 
-        // 1. Definir las casillas afectadas (1 casilla normal o 4 para fortaleza)
+        // 1. PRIMERO LA FORTALEZA (Excepción: Montañas pueden ir antes si quieres, si no, quita '&& !isMountain')
+        if (!isFortress && !hasFortress && !isMountain) {
+            showNotification("🚫 Primero debes construir la FORTALEZA", true);
+            return;
+        }
+
+        // 2. SOLO EN EL ANILLO DE SALIDA (Unidades normales)
+        if (!isFortress && !isMountain && hasFortress) {
+            if (!isInExitZone(r, c, fOrigin)) {
+                showNotification("🛡️ Las tropas deben desplegarse junto a la Fortaleza (Anillo de Salida)", true);
+                return;
+            }
+        }
+
+        // Definir celdas afectadas para chequeo final
         let cellsToCheck = [];
         if (isFortress) {
-            // La fortaleza ocupa (r,c), (r,c+1), (r+1,c), (r+1,c+1)
-            // Verificamos que no se salga del tablero
-            if (r + 1 > 9 || c + 1 > 9) {
-                showNotification("¡La fortaleza no cabe ahí! Se sale del mapa.", true);
+            if (r + 1 > 9 || c + 1 > 9) { showNotification("¡No cabe aquí!", true); return; }
+            cellsToCheck.push({r:r, c:c}, {r:r, c:c+1}, {r:r+1, c:c}, {r:r+1, c:c+1});
+
+            // Regla de márgenes de fortaleza
+            const invalidRows = [0, 4, 5, 9];
+            const invalidCols = [0, 9];
+            if (invalidRows.includes(r) || invalidRows.includes(r+1) || 
+                invalidCols.includes(c) || invalidCols.includes(c+1)) {
+                showNotification("🏰 Posición inválida (Bordes o Centro prohibidos)", true);
                 return;
             }
-            cellsToCheck.push({r: r, c: c});
-            cellsToCheck.push({r: r, c: c+1});
-            cellsToCheck.push({r: r+1, c: c});
-            cellsToCheck.push({r: r+1, c: c+1});
         } else {
-            // Unidad normal: solo 1 casilla
             cellsToCheck.push({r: r, c: c});
         }
 
-        // 2. Comprobar Agua y Ocupación para todas las casillas afectadas
-// 2. Comprobar Agua y Ocupación para todas las casillas afectadas
+        // Chequeo final de Terreno/Ocupación
         for (let cell of cellsToCheck) {
-            
-            // CORRECCIÓN: Si hay agua Y la pieza NO es una fortaleza, prohibir.
-            // (Es decir, la fortaleza SÍ puede ponerse en agua).
             if (terrain[cell.r][cell.c] === 'water' && !isFortress) {
-                showNotification("¡No puedes colocar unidades en el AGUA!", true);
-                return; // Cancelar todo el movimiento
+                showNotification("🌊 ¡Al agua no!", true); return; 
             }
-
-            // Check Ocupado
             if (logicBoard[cell.r][cell.c] !== null) {
-                showNotification("¡Esa posición está OCUPADA!", true);
-                return;
+                showNotification("⛔ Casilla ocupada", true); return;
             }
         }
-        // --- EJECUCIÓN DEL MOVIMIENTO ---
 
-        // A. Si viene de la RESERVA
+        // --- EJECUCIÓN ---
+// --- EJECUCIÓN ---
         if (data.source === 'reserve') {
             if (reserves[data.army][data.type] > 0) {
-                reserves[data.army][data.type]--; // Restamos 1 unidad del inventario
-                
-                // Colocamos las piezas en el tablero
-                // Si es fortaleza, se escriben 4 "trozos" de fortaleza
+                reserves[data.army][data.type]--;
                 cellsToCheck.forEach(cell => {
                     logicBoard[cell.r][cell.c] = { army: data.army, type: data.type };
                 });
                 
-                showNotification(`Has desplegado: ${data.type.toUpperCase()}`);
+                // --- NUEVO: Guardar posición si es fortaleza ---
+                if (isFortress) {
+                    fortressPos[data.army] = { r: r, c: c };
+                    showNotification("🏰 Fortaleza lista. ¡Despliega en el perímetro!");
+                } 
+                // ----------------------------------------------
+                else {
+                    showNotification(`Desplegado: ${data.type.toUpperCase()}`);
+                }
             }
-        } 
-        // B. Si viene del TABLERO (Movimiento)
-        else if (data.source === 'board') {
-            // Nota: Mover una fortaleza ya colocada es complejo (habría que borrar 4 y poner 4).
-            // Para este modo Dios, si mueves una pieza del tablero, asumimos que mueves SOLO ese trozo.
-            // Si quieres mover la fortaleza entera una vez puesta, habría que programar lógica de "grupo".
-            // Por ahora, tratamos el movimiento en tablero como 1x1.
+        } else if (data.source === 'board') {
+            logicBoard[data.originR][data.originC] = null;
+            logicBoard[r][c] = { army: data.army, type: data.type };
             
-            logicBoard[data.originR][data.originC] = null; // Borrar origen
-            logicBoard[r][c] = { army: data.army, type: data.type }; // Poner destino
-            showNotification("Pieza reubicada");
+            // --- NUEVO: Actualizar posición si movemos la fortaleza (Modo Dios) ---
+            if (isFortress) {
+                fortressPos[data.army] = { r: r, c: c };
+            }
+            // ---------------------------------------------------------------------
+            
+            showNotification("Unidad reubicada");
         }
-
-        // Actualizar vista
+        
         renderBoard();
         updateInventories();
     }
-  
+
 </script>
 </body>
 </html>

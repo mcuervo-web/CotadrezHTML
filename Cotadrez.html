@@ -2067,9 +2067,18 @@
                     if (!isInExitZone(r, c, fOrigin)) isValid = false;
                     if (target !== null) isValid = false;
                 } else {
-                    if (!isValidMove(type, draggingMeta.originR, draggingMeta.originC, r, c)) isValid = false;
+                    // 1. Validación Geométrica
+                    if (!isValidMove(type, draggingMeta.originR, draggingMeta.originC, r, c)) {
+                        isValid = false;
+                        // Dejamos el mensaje por defecto (Movimiento Ilegal)
+                    }
+
+                    // 2. Validación de Ocupación (Si la geometría era válida)
                     if (isValid && target) {
-                        if (target.army === army && type !== 'lanceros') isValid = false;
+                        if (target.army === army && type !== 'lanceros') {
+                            isValid = false;
+                            specialMessage = t('occupied'); // <--- AHORA TE AVISARÁ ESPECÍFICAMENTE
+                        }
                     }
                 }
                 cells = [{ r: r, c: c }];
@@ -2324,7 +2333,7 @@
                                 // Captura Objetivo
                                 if (target.type === 'rey') {
                                     gameState = 'game-over'; logicBoard[r][c] = null; renderBoard();
-                                    document.getElementById('status-bar').innerText = `👑 VICTORIA ${data.army.toUpperCase()}`;
+                                    finishGame(data.army, "reason_mate");
                                     return;
                                 }
                                 dungeons[data.army].push({ type: target.type, army: target.army });
@@ -2335,7 +2344,7 @@
                                 if (target.type === 'rey') {
                                     gameState = 'game-over'; logicBoard[data.originR][data.originC] = null;
                                     logicBoard[r][c] = { army: data.army, type: data.type }; renderBoard();
-                                    document.getElementById('status-bar').innerText = `👑 VICTORIA ${data.army.toUpperCase()}`;
+                                    finishGame(data.army, "reason_mate");
                                     return;
                                 }
                                 dungeons[data.army].push({ type: target.type, army: target.army });
